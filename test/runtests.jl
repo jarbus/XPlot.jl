@@ -2,16 +2,16 @@ using XPlot
 using Plots
 using Test
 @testset "InteractionDistanceErrors" begin
-    data = joinpath(@__DIR__, "x/interaction-distance-1/data")
+    jld2path = joinpath(@__DIR__, "x/interaction-distance-1/data/archive.jld2")
+    figname = joinpath(@__DIR__, "x/interaction-distance-1/fig.png")
     # We probably want to move this into PhyloCoEvo at some point
-    iderrs = XPlot.InteractionDistanceErrors([1,2,3], joinpath(data, "archive.jld2"))
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), jld2path)
     @test length(iderrs) == 3
-    tsp = XPlot.TimeSeriesPlot("test", collect(values(iderrs)))
+    tsp = XPlot.TimeSeriesPlot("test", iderrs)
     XPlot.plot(tsp)
-    savefig("test.png")
+    savefig("$figname")
     # clear current plot
     plot()
-    run(`rm test.png`)
 end
 
 @testset "DummyData" begin
