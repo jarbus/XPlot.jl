@@ -25,6 +25,7 @@ using Test
 end
 
 @testset "DummyData" begin
+    mkdir(joinpath(@__DIR__, "dummy-figs"), exist_ok=true)
     TSDP = XPlot.TimeSeriesDataPoint
     tsd1a = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 1, 0.5, 1.5), TSDP(2, 2, 1, 3), TSDP(3,2,1,3)])
     tsd1b = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)])
