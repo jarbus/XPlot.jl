@@ -60,5 +60,11 @@ end
         @test isfile(figname)
         # clear current plot
         plot()
+        figname2 = joinpath(@__DIR__, "dummy-figs/agg-dummy-data-1a,1b,2.png")
+        XPlot.plot(XPlot.TimeSeriesPlot("test", XPlot.agg(vcat(dd1, dd2))))
+        savefig(figname2)
+        @test isfile(figname2)
+        # clear current plot
+        plot()
     end
 end
