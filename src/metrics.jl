@@ -4,7 +4,7 @@ function load(
         metric::AbstractMetric,
         paths::Vector{String}
     )
-    vcat([load(metric, path) for path in paths])
+    vcat([load(metric, path) for path in paths]...)
 end
 
 struct InteractionDistanceErrors <: AbstractMetric

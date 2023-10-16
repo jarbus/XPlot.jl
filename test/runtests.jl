@@ -12,6 +12,16 @@ using Test
     savefig("$figname")
     # clear current plot
     plot()
+    # Load two iderrs
+    paths = repeat([jld2path], 2)
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), paths)
+    @test length(iderrs) == 6
+    tsp = XPlot.TimeSeriesPlot(iderrs)
+    XPlot.plot(tsp)
+    figname = joinpath(@__DIR__, "x/interaction-distance-1/fig2.png")
+    savefig("$figname")
+    # clear current plot
+    plot()
 end
 
 @testset "DummyData" begin
