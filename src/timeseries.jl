@@ -30,6 +30,7 @@ struct TimeSeriesPlot
     name::String
     data::Vector{AbstractTimeSeries}
 end
+TimeSeriesPlot(data::Vector{<:AbstractTimeSeries}) = TimeSeriesPlot("",data)
 
 
 Base.show(io::IO, datapoint::AbstractTimeSeriesDataPoint) = print(io, "($(round(datapoint.x, digits=2)), $(round(datapoint.value, digits=2)))")
@@ -90,6 +91,7 @@ function plot(p::AbstractTimeSeries)
 end
 
 function plot(p::TimeSeriesPlot)
+    Plots.plot(title=p.name)
     for series in p.data
         plot(series)
     end

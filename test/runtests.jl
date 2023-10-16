@@ -7,7 +7,7 @@ using Test
     # We probably want to move this into PhyloCoEvo at some point
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), jld2path)
     @test length(iderrs) == 3
-    tsp = XPlot.TimeSeriesPlot("test", iderrs)
+    tsp = XPlot.TimeSeriesPlot(iderrs)
     XPlot.plot(tsp)
     savefig("$figname")
     # clear current plot
