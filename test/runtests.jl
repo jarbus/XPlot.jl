@@ -28,7 +28,7 @@ end
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
     @test length(iderrs) == 3
     tsp = XPlot.TimeSeriesPlot(iderrs)
-    XPlot.plot(tsp)
+    plot(tsp)
     savefig("$figname")
     # clear current plot
     Plots.plot()
@@ -37,7 +37,7 @@ end
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
     @test length(iderrs) == 6
     tsp = XPlot.TimeSeriesPlot(iderrs)
-    XPlot.plot(tsp)
+    plot(tsp)
     figname = joinpath(@__DIR__, "x/interaction-distance-1/fig2.png")
     savefig("$figname")
     # clear current plot
@@ -48,7 +48,7 @@ end
     agg_iderrs = XPlot.agg(iderrs)
     @test length(agg_iderrs) == 3
     tsp = XPlot.TimeSeriesPlot("Two agg", agg_iderrs)
-    XPlot.plot(tsp)
+    plot(tsp)
     figname = joinpath(@__DIR__, "x/interaction-distance-1/fig3.png")
     savefig("$figname")
     # clear current plot
@@ -65,7 +65,7 @@ end
     @testset "TimeSeriesPlot" begin
         # Plot two different time series
         tsp = XPlot.TimeSeriesPlot("test", [tsd1a, tsd2])
-        XPlot.plot(tsp)
+        plot(tsp)
         figname = joinpath(@__DIR__, "dummy-figs/dummy-data-1a,2.png")
         savefig(figname)
         @test length(tsp.data) == 2
@@ -98,13 +98,13 @@ end
         @test agg_dd2.data[1].x == 1 && agg_dd2.data[1].value == 5 && agg_dd2.data[1].count == n_samples
         @test agg_dd2.data[2].x == 2 && agg_dd2.data[2].value == 6 && agg_dd2.data[2].count == n_samples
         @test agg_dd2.data[3].x == 3 && agg_dd2.data[3].value == 6 && agg_dd2.data[3].count == n_samples
-        XPlot.plot(XPlot.TimeSeriesPlot("test", [agg_dd1]))
+        plot(XPlot.TimeSeriesPlot("test", [agg_dd1]))
         savefig(figname)
         @test isfile(figname)
         # clear current plot
         Plots.plot()
         figname2 = joinpath(@__DIR__, "dummy-figs/agg-dummy-data-1a,1b,2.png")
-        XPlot.plot(XPlot.TimeSeriesPlot("test", XPlot.agg(vcat(dd1, dd2))))
+        plot(XPlot.TimeSeriesPlot("test", XPlot.agg(vcat(dd1, dd2))))
         savefig(figname2)
         @test isfile(figname2)
         # clear current plot
