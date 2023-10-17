@@ -52,7 +52,7 @@ end
 
 function AggregatedTimeSeriesData(
     name::String,
-    data::Vector{TimeSeriesData}
+    data::Vector{<:AbstractTimeSeries}
 )
     # assert all time series data have the same name
     @assert length(unique([d.name for d in data])) == 1
@@ -73,8 +73,8 @@ function AggregatedTimeSeriesData(
     agg_data
 end
 
-function agg(timeseriesdata::Vector{TimeSeriesData})
-    agg_data = Dict{String, Vector{TimeSeriesData}}(tsd.name => [] for tsd in timeseriesdata)
+function agg(timeseriesdata::Vector{T}) where T <: AbstractTimeSeries
+    agg_data = Dict{String, Vector{T}}(tsd.name => T[] for tsd in timeseriesdata)
     for tsd in timeseriesdata
         push!(agg_data[tsd.name], tsd)
     end

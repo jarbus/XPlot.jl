@@ -20,6 +20,16 @@ using Test
     XPlot.plot(tsp)
     figname = joinpath(@__DIR__, "x/interaction-distance-1/fig2.png")
     savefig("$figname")
+    plot()
+    # Load and aggregate two iderrs
+    paths = repeat([jld2path], 10)
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), paths)
+    agg_iderrs = XPlot.agg(iderrs)
+    @test length(agg_iderrs) == 3
+    tsp = XPlot.TimeSeriesPlot("Two agg", agg_iderrs)
+    XPlot.plot(tsp)
+    figname = joinpath(@__DIR__, "x/interaction-distance-1/fig3.png")
+    savefig("$figname")
     # clear current plot
     plot()
 end
