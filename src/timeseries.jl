@@ -82,18 +82,19 @@ function agg(timeseriesdata::Vector{T}) where T <: AbstractTimeSeries
 end
 
 
-function plot(p::AbstractTimeSeries)
+function Plots.plot(p::AbstractTimeSeries; kwargs...)
     xs = [d.x for d in p.data]
     ys = [d.value for d in p.data]
     upper = [d.upper_bound - d.value for d in p.data]
     lower = [d.value - d.lower_bound for d in p.data]
-    plot!(xs, ys, ribbon=(upper, lower), label=p.name)
+    plot!(xs, ys, ribbon=(upper, lower), label=p.name; kwargs...)
 end
 
-function plot(p::TimeSeriesPlot)
+function Plots.plot(p::TimeSeriesPlot; kwargs...)
     Plots.plot(title=p.name)
     for series in p.data
-        plot(series)
+        p = plot(series; kwargs...)
     end
+    p
 end
 
