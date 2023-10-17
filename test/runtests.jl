@@ -5,7 +5,7 @@ nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="-")
 @testset "NameInference" begin
     paths = ["x/interaction-distance-1/data/archive.jld2",
         "x/interaction-distance-2/data/archive.jld2"]
-    @test XPlot.compute_prefix(paths) == dirname("x/")
+    @test XPlot.compute_prefix(paths) == "x/"
 
     @test ""      == XPlot.remove_trailing_numbers("451")
     @test "seed-" == XPlot.remove_trailing_numbers("seed-4")

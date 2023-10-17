@@ -17,12 +17,12 @@ function compute_prefix(paths::Vector{String})
         c = paths[1][i]
         for path in paths
             if i > length(path) || path[i] != c
-                return dirname(paths[1][1:prefix_end])
+                return dirname(paths[1][1:prefix_end]) * "/"
             end
         end
         prefix_end += 1
     end
-    prefix = dirname(paths[1][1:prefix_end])
+    prefix = dirname(paths[1][1:prefix_end]) * "/"
     prefix
 end
 
