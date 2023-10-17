@@ -59,9 +59,9 @@ end
     dummyfigsdir = joinpath(@__DIR__, "dummy-figs")
     isdir(dummyfigsdir) || mkdir(dummyfigsdir)
     TSDP = XPlot.TimeSeriesDataPoint
-    tsd1a = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 1, 0.5, 1.5), TSDP(2, 2, 1, 3), TSDP(3,2,1,3)])
-    tsd1b = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)])
-    tsd2 = XPlot.TimeSeriesData("dummy-data-2", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)])
+    tsd1a = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 1, 0.5, 1.5), TSDP(2, 2, 1, 3), TSDP(3,2,1,3)], "x", "y", "dummy-data-1")
+    tsd1b = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data-1")
+    tsd2 = XPlot.TimeSeriesData("dummy-data-2", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data-2")
     @testset "TimeSeriesPlot" begin
         # Plot two different time series
         tsp = XPlot.TimeSeriesPlot("test", [tsd1a, tsd2])
@@ -76,7 +76,7 @@ end
     @testset "Aggregation" begin
         # Create aggregate time series data
         figname = joinpath(@__DIR__, "dummy-figs/agg-dummy-data-1a,1b.png")
-        manual_agg_data = XPlot.AggregatedTimeSeriesData("agg_dummy_data", [tsd1a, tsd1b])
+        manual_agg_data = XPlot.AggregatedTimeSeriesData([tsd1a, tsd1b])
         n_samples = 10
         dd1 = repeat([tsd1a, tsd1b], Int(n_samples / 2))
         dd2 = repeat([tsd2], n_samples)

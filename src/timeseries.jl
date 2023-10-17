@@ -16,14 +16,20 @@ struct AggregatedTimeSeriesDataPoint <: AbstractTimeSeriesDataPoint
     count::Int64
 end
 
-struct TimeSeriesData <: AbstractTimeSeries
+Base.@kwdef struct TimeSeriesData <: AbstractTimeSeries
     name::String
     data::Vector{AbstractTimeSeriesDataPoint}
+    xname::String = ""
+    yaxis::String = ""
+    label::String = ""
 end
 
-struct AggregatedTimeSeriesData <: AbstractTimeSeries
+Base.@kwdef struct AggregatedTimeSeriesData <: AbstractTimeSeries
     name::String
     data::Vector{AggregatedTimeSeriesDataPoint}
+    xname::String = ""
+    yaxis::String = ""
+    label::String = ""
 end
 
 struct TimeSeriesPlot
@@ -51,11 +57,17 @@ end
 
 
 function AggregatedTimeSeriesData(
-    name::String,
     data::Vector{<:AbstractTimeSeries}
 )
     # assert all time series data have the same name
     @assert length(unique([d.name for d in data])) == 1
+    @assert length(unique([d.xname for d in data])) == 1
+    @assert length(unique([d.yaxis for d in data])) == 1
+    @assert length(unique([d.label for d in data])) == 1
+    name = data[1].name
+    xname = data[1].xname
+    yaxis = data[1].yaxis
+    label = data[1].label
     agg_data = Dict{Float64, Vector{TimeSeriesDataPoint}}()
     # aggregate data over time series
     for tsd in data
@@ -69,16 +81,16 @@ function AggregatedTimeSeriesData(
     # aggregate data over time points
     xs = sort!(collect(keys(agg_data)))
     datapoints = [AggregatedTimeSeriesDataPoint(agg_data[x]) for x in xs]
-    agg_data = AggregatedTimeSeriesData(name, datapoints)
+    agg_data = AggregatedTimeSeriesData(name, datapoints, xname, yaxis, label)
     agg_data
 end
 
 function agg(timeseriesdata::Vector{T}) where T <: AbstractTimeSeries
-    agg_data = Dict{String, Vector{T}}(tsd.name => T[] for tsd in timeseriesdata)
+    agg_data = Dict{String, Vector{T}}((tsd.xname * tsd.label) => T[] for tsd in timeseriesdata)
     for tsd in timeseriesdata
-        push!(agg_data[tsd.name], tsd)
+        push!(agg_data[(tsd.xname * tsd.label)], tsd)
     end
-    return [AggregatedTimeSeriesData(name, data) for (name, data) in agg_data]
+    return [AggregatedTimeSeriesData(data) for data in values(agg_data)]
 end
 
 
@@ -87,10 +99,10 @@ function Plots.plot(p::AbstractTimeSeries; kwargs...)
     ys = [d.value for d in p.data]
     upper = [d.upper_bound - d.value for d in p.data]
     lower = [d.value - d.lower_bound for d in p.data]
-    plot!(xs, ys, ribbon=(upper, lower), label=p.name; kwargs...)
+    plot!(xs, ys, ribbon=(upper, lower), label=p.label; kwargs...)
 end
 function Plots.plot(timeseriess::Vector{<:AbstractTimeSeries}; kwargs...)
-    p = plot()
+    p = plot(;kwargs...)
     for timeseries in timeseriess
         p = plot(timeseries; kwargs...)
     end

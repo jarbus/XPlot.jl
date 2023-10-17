@@ -21,8 +21,10 @@ InteractionDistanceErrors(r::UnitRange{Int}) = InteractionDistanceErrors(collect
 
 struct InteractionDistanceError <: AbstractTimeSeries
     name::String
-    distance::Int
     data::Vector{TimeSeriesDataPoint}
+    xname::String
+    yaxis::String
+    label::String
 end
 
 function load(
@@ -31,7 +33,7 @@ function load(
         path::String
     )
     datapoints = Dict{Int, InteractionDistanceError}(
-        d => InteractionDistanceError(name * " distance=$d", d,[]) for d in iders.distances)
+        d => InteractionDistanceError(name,[], name, "EstimateError", "distance=$d") for d in iders.distances)
 
     jldopen(path, "r") do file
         for gen in keys(file["gen"])
