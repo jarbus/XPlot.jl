@@ -2,10 +2,16 @@ abstract type AbstractMetric end
 
 function load(
         metric::AbstractMetric,
+        nc::NameConfig,
         paths::Vector{String}
     )
-    vcat([load(metric, path) for path in paths]...)
+    prefix = compute_prefix(paths)
+    names = [compute_name(nc, prefix, path) for path in paths]
+    paths = [joinpath(path, nc.relative_datapath) for path in paths]
+
+    vcat([load(metric, name, path) for (name, path) in zip(names, paths)]...)
 end
+load(metric::AbstractMetric, path::String) = load(metric, "", path)
 
 struct InteractionDistanceErrors <: AbstractMetric
     distances::Vector{Int}
@@ -21,10 +27,11 @@ end
 
 function load(
         iders::InteractionDistanceErrors,
+        name::String,
         path::String
     )
     datapoints = Dict{Int, InteractionDistanceError}(
-        d => InteractionDistanceError(string(d), d,[]) for d in iders.distances)
+        d => InteractionDistanceError(name * " distance=$d", d,[]) for d in iders.distances)
 
     jldopen(path, "r") do file
         for gen in keys(file["gen"])
