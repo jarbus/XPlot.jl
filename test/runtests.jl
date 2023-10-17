@@ -11,7 +11,7 @@ using Test
     XPlot.plot(tsp)
     savefig("$figname")
     # clear current plot
-    plot()
+    Plots.plot()
     # Load two iderrs
     paths = repeat([jld2path], 2)
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), paths)
@@ -20,7 +20,8 @@ using Test
     XPlot.plot(tsp)
     figname = joinpath(@__DIR__, "x/interaction-distance-1/fig2.png")
     savefig("$figname")
-    plot()
+    # clear current plot
+    Plots.plot()
     # Load and aggregate two iderrs
     paths = repeat([jld2path], 10)
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), paths)
@@ -31,7 +32,7 @@ using Test
     figname = joinpath(@__DIR__, "x/interaction-distance-1/fig3.png")
     savefig("$figname")
     # clear current plot
-    plot()
+    Plots.plot()
 end
 
 @testset "DummyData" begin  
@@ -50,7 +51,7 @@ end
         @test length(tsp.data) == 2
         @test isfile(figname)
         # clear current plot
-        plot()
+        Plots.plot()
     end
     @testset "Aggregation" begin
         # Create aggregate time series data
@@ -81,12 +82,12 @@ end
         savefig(figname)
         @test isfile(figname)
         # clear current plot
-        plot()
+        Plots.plot()
         figname2 = joinpath(@__DIR__, "dummy-figs/agg-dummy-data-1a,1b,2.png")
         XPlot.plot(XPlot.TimeSeriesPlot("test", XPlot.agg(vcat(dd1, dd2))))
         savefig(figname2)
         @test isfile(figname2)
         # clear current plot
-        plot()
+        Plots.plot()
     end
 end
