@@ -1,11 +1,31 @@
 using XPlot
 using Plots
 using Test
+nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="-")
+@testset "NameInference" begin
+    paths = ["x/interaction-distance-1/data/archive.jld2",
+        "x/interaction-distance-2/data/archive.jld2"]
+    @test XPlot.compute_prefix(paths) == dirname("x/")
+
+    @test ""      == XPlot.remove_trailing_numbers("451")
+    @test "seed-" == XPlot.remove_trailing_numbers("seed-4")
+    @test ""      == XPlot.remove_trailing_numbers("")
+
+    @test "hi" == XPlot.remove_seed(nc, "hi-3")
+    @test "" == XPlot.remove_seed(nc, "-3")
+    @test "hi" == XPlot.remove_seed(nc, "hi")
+    @test "x/interaction-distance-1/" == XPlot.remove_relative_datapath(nc, "x/interaction-distance-1/data/archive.jld2")
+    @test "x/interaction-distance-1/" == XPlot.remove_relative_datapath(nc, "x/interaction-distance-1/")
+
+    @test "interaction-distance-1" == XPlot.remove_prefix("x/", "x/interaction-distance-1")
+
+    @test "interaction-distance-1" == XPlot.compute_name(nc, "x/", "x/interaction-distance-1/data/archive.jld2")
+end
 @testset "InteractionDistanceErrors" begin
-    jld2path = joinpath(@__DIR__, "x/interaction-distance-1/data/archive.jld2")
+    jld2path = joinpath(@__DIR__, "x/interaction-distance-1/")
     figname = joinpath(@__DIR__, "x/interaction-distance-1/fig.png")
     # We probably want to move this into PhyloCoEvo at some point
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), jld2path)
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
     @test length(iderrs) == 3
     tsp = XPlot.TimeSeriesPlot(iderrs)
     XPlot.plot(tsp)
@@ -14,7 +34,7 @@ using Test
     Plots.plot()
     # Load two iderrs
     paths = repeat([jld2path], 2)
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), paths)
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
     @test length(iderrs) == 6
     tsp = XPlot.TimeSeriesPlot(iderrs)
     XPlot.plot(tsp)
@@ -24,7 +44,7 @@ using Test
     Plots.plot()
     # Load and aggregate two iderrs
     paths = repeat([jld2path], 10)
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), paths)
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
     agg_iderrs = XPlot.agg(iderrs)
     @test length(agg_iderrs) == 3
     tsp = XPlot.TimeSeriesPlot("Two agg", agg_iderrs)
