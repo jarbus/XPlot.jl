@@ -89,12 +89,15 @@ function Plots.plot(p::AbstractTimeSeries; kwargs...)
     lower = [d.value - d.lower_bound for d in p.data]
     plot!(xs, ys, ribbon=(upper, lower), label=p.name; kwargs...)
 end
-
-function Plots.plot(p::TimeSeriesPlot; kwargs...)
-    Plots.plot(title=p.name)
-    for series in p.data
-        p = plot(series; kwargs...)
+function Plots.plot(timeseriess::Vector{<:AbstractTimeSeries}; kwargs...)
+    p = plot()
+    for timeseries in timeseriess
+        p = plot(timeseries; kwargs...)
     end
     p
+end
+
+function Plots.plot(p::TimeSeriesPlot; kwargs...)
+    Plots.plot(p.data; title=p.name, kwargs...)
 end
 
