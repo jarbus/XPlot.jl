@@ -7,11 +7,9 @@ function load(
     )
     paths = find_datapath_recursively(nc, paths)
 
-    vcat([load(metric, nc, path) for path in paths]...)
+    vcat([_load(metric, nc, path) for path in paths]...)
 end
 load(metric::AbstractMetric, nc::NameConfig, path::String)= load(metric, nc, [path])
-load(metric::AbstractMetric, path::String) = load(metric, "", path)
-
 
 function subdir_naming_scheme(nc::NameConfig, path::String)
     # We assume that the path is an absolute
@@ -29,12 +27,13 @@ struct InteractionDistanceErrors <: AbstractMetric
 end
 InteractionDistanceErrors(r::UnitRange{Int}) = InteractionDistanceErrors(collect(r))
 
-function load(
+function _load(
         iders::InteractionDistanceErrors,
         nc::NameConfig,
         path::String
     )
     classname, xname, trial = subdir_naming_scheme(nc, path)
+    println("Loading cls=$classname x=$xname trial=$trial")
     datapoints = Dict{Int, TimeSeriesData}(
         d => TimeSeriesData("InteractionDistanceError",[], xname, "EstimateError", "distance=$d", parse(Int, trial)) for d in iders.distances)
 
