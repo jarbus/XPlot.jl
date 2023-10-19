@@ -14,10 +14,12 @@ nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
     @test xname == "interaction-distance"
     @test trial == "1"
 
-    path = "test/x/interaction-distance/"
+    DIR = @__DIR__
+    path = joinpath(@__DIR__,"x/interaction-distance/")
     paths = XPlot.find_datapath_recursively(nc, path)
-    @test paths[1] == "test/x/interaction-distance/1/data/archive.jld2"
-    @test paths[2] == "test/x/interaction-distance/2/data/archive.jld2"
+    @test length(paths) == 2
+    @test paths[1] == "$DIR/x/interaction-distance/1/data/archive.jld2"
+    @test paths[2] == "$DIR/x/interaction-distance/2/data/archive.jld2"
 
     @test ""      == XPlot.remove_trailing_numbers("451")
     @test "seed-" == XPlot.remove_trailing_numbers("seed-4")
