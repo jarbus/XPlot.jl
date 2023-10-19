@@ -8,6 +8,29 @@ Base.@kwdef struct NameConfig
     relative_datapath = "data/archive.jld2"
 end
 
+function find_datapath_recursively(nc::NameConfig, path::String)
+    if isfile(joinpath(path, nc.relative_datapath))
+        return [joinpath(path, nc.relative_datapath)]
+    end
+    paths = String[]
+    if isdir(path) 
+        for entry in readdir(path)
+            if entry == "." || entry == ".."
+                continue 
+            end
+            for path in find_datapath_recursively(nc, joinpath(path, entry))
+                push!(paths, path)
+            end
+        end
+    end
+    paths
+end
+
+function find_datapath_recursively(nc::NameConfig, paths::Vector{String})
+    paths = vcat([find_datapath_recursively(nc, path) for path in paths]...)
+    paths
+end
+
 function compute_prefix(paths::Vector{String})
     # Compute the shared path of a set of paths
     # We assume that the paths are all absolute paths
@@ -17,12 +40,13 @@ function compute_prefix(paths::Vector{String})
         c = paths[1][i]
         for path in paths
             if i > length(path) || path[i] != c
-                return dirname(paths[1][1:prefix_end]) * "/"
+                return dirname(dirname(paths[1][1:prefix_end])) * "/"
             end
         end
         prefix_end += 1
     end
-    prefix = dirname(paths[1][1:prefix_end]) * "/"
+    prefix = dirname(dirname(paths[1][1:prefix_end])) * "/"
+                
     prefix
 end
 

@@ -1,18 +1,30 @@
 using XPlot
 using Plots
 using Test
-nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="-")
+
+nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
+
 @testset "NameInference" begin
-    paths = ["x/interaction-distance-1/data/archive.jld2",
-        "x/interaction-distance-2/data/archive.jld2"]
+    paths = ["x/interaction-distance/1/data/archive.jld2",
+        "x/interaction-distance/2/data/archive.jld2"]
     @test XPlot.compute_prefix(paths) == "x/"
+
+    classname, xname, trial = XPlot.subdir_naming_scheme(nc, paths[1])
+    @test classname == "x"
+    @test xname == "interaction-distance"
+    @test trial == "1"
+
+    path = "test/x/interaction-distance/"
+    paths = XPlot.find_datapath_recursively(nc, path)
+    @test paths[1] == "test/x/interaction-distance/1/data/archive.jld2"
+    @test paths[2] == "test/x/interaction-distance/2/data/archive.jld2"
 
     @test ""      == XPlot.remove_trailing_numbers("451")
     @test "seed-" == XPlot.remove_trailing_numbers("seed-4")
     @test ""      == XPlot.remove_trailing_numbers("")
 
-    @test "hi" == XPlot.remove_seed(nc, "hi-3")
-    @test "" == XPlot.remove_seed(nc, "-3")
+    @test "hi" == XPlot.remove_seed(nc, "hi/3")
+    @test "" == XPlot.remove_seed(nc, "/3")
     @test "hi" == XPlot.remove_seed(nc, "hi")
     @test "x/interaction-distance-1/" == XPlot.remove_relative_datapath(nc, "x/interaction-distance-1/data/archive.jld2")
     @test "x/interaction-distance-1/" == XPlot.remove_relative_datapath(nc, "x/interaction-distance-1/")
@@ -22,10 +34,10 @@ nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="-")
     @test "interaction-distance-1" == XPlot.compute_name(nc, "x/", "x/interaction-distance-1/data/archive.jld2")
 end
 @testset "InteractionDistanceErrors" begin
-    jld2path = joinpath(@__DIR__, "x/interaction-distance-1/")
-    figname = joinpath(@__DIR__, "x/interaction-distance-1/fig.png")
+    jld2path = joinpath(@__DIR__, "x/interaction-distance/")
+    figname = joinpath(@__DIR__, "x/interaction-distance/fig.png")
     # We probably want to move this into PhyloCoEvo at some point
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path * "1"])
     @test length(iderrs) == 3
     tsp = XPlot.TimeSeriesPlot(iderrs)
     plot(tsp)
@@ -33,12 +45,11 @@ end
     # clear current plot
     Plots.plot()
     # Load two iderrs
-    paths = repeat([jld2path], 2)
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
+    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
     @test length(iderrs) == 6
     tsp = XPlot.TimeSeriesPlot(iderrs)
     plot(tsp)
-    figname = joinpath(@__DIR__, "x/interaction-distance-1/fig2.png")
+    figname = joinpath(@__DIR__, "x/interaction-distance/fig2.png")
     savefig("$figname")
     # clear current plot
     Plots.plot()
@@ -49,7 +60,7 @@ end
     @test length(agg_iderrs) == 3
     tsp = XPlot.TimeSeriesPlot("Two agg", agg_iderrs)
     plot(tsp)
-    figname = joinpath(@__DIR__, "x/interaction-distance-1/fig3.png")
+    figname = joinpath(@__DIR__, "x/interaction-distance/fig3.png")
     savefig("$figname")
     # clear current plot
     Plots.plot()
@@ -59,9 +70,9 @@ end
     dummyfigsdir = joinpath(@__DIR__, "dummy-figs")
     isdir(dummyfigsdir) || mkdir(dummyfigsdir)
     TSDP = XPlot.TimeSeriesDataPoint
-    tsd1a = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 1, 0.5, 1.5), TSDP(2, 2, 1, 3), TSDP(3,2,1,3)], "x", "y", "dummy-data-1")
-    tsd1b = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data-1")
-    tsd2 = XPlot.TimeSeriesData("dummy-data-2", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data-2")
+    tsd1a = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 1, 0.5, 1.5), TSDP(2, 2, 1, 3), TSDP(3,2,1,3)], "x", "y", "dummy-data",1)
+    tsd1b = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data",1)
+    tsd2 = XPlot.TimeSeriesData("dummy-data-2", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data-2",1)
     @testset "TimeSeriesPlot" begin
         # Plot two different time series
         tsp = XPlot.TimeSeriesPlot("test", [tsd1a, tsd2])

@@ -5,35 +5,38 @@ function load(
         nc::NameConfig,
         paths::Vector{String}
     )
-    prefix = compute_prefix(paths)
-    names = [compute_name(nc, prefix, path) for path in paths]
-    paths = [joinpath(path, nc.relative_datapath) for path in paths]
+    paths = find_datapath_recursively(nc, paths)
 
-    vcat([load(metric, name, path) for (name, path) in zip(names, paths)]...)
+    vcat([load(metric, nc, path) for path in paths]...)
 end
+load(metric::AbstractMetric, nc::NameConfig, path::String)= load(metric, nc, [path])
 load(metric::AbstractMetric, path::String) = load(metric, "", path)
+
+
+function subdir_naming_scheme(nc::NameConfig, path::String)
+    # We assume that the path is an absolute
+    s = remove_relative_datapath(nc, path) |> dirname
+    trial = basename(s)
+    s = dirname(s)
+    xname = basename(s)
+    s = dirname(s)
+    classname = basename(s)
+    classname, xname, trial
+end
 
 struct InteractionDistanceErrors <: AbstractMetric
     distances::Vector{Int}
 end
 InteractionDistanceErrors(r::UnitRange{Int}) = InteractionDistanceErrors(collect(r))
 
-
-struct InteractionDistanceError <: AbstractTimeSeries
-    name::String
-    data::Vector{TimeSeriesDataPoint}
-    xname::String
-    yaxis::String
-    label::String
-end
-
 function load(
         iders::InteractionDistanceErrors,
-        name::String,
+        nc::NameConfig,
         path::String
     )
-    datapoints = Dict{Int, InteractionDistanceError}(
-        d => InteractionDistanceError(name,[], name, "EstimateError", "distance=$d") for d in iders.distances)
+    classname, xname, trial = subdir_naming_scheme(nc, path)
+    datapoints = Dict{Int, TimeSeriesData}(
+        d => TimeSeriesData("InteractionDistanceError",[], xname, "EstimateError", "distance=$d", parse(Int, trial)) for d in iders.distances)
 
     jldopen(path, "r") do file
         for gen in keys(file["gen"])

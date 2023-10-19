@@ -22,6 +22,7 @@ Base.@kwdef struct TimeSeriesData <: AbstractTimeSeries
     xname::String = ""
     yaxis::String = ""
     label::String = ""
+    trial::Union{Int64, Nothing} = nothing
 end
 
 Base.@kwdef struct AggregatedTimeSeriesData <: AbstractTimeSeries
@@ -40,6 +41,7 @@ TimeSeriesPlot(data::Vector{<:AbstractTimeSeries}) = TimeSeriesPlot("",data)
 
 
 Base.show(io::IO, datapoint::AbstractTimeSeriesDataPoint) = print(io, "($(round(datapoint.x, digits=2)), $(round(datapoint.value, digits=2)))")
+Base.show(io::IO, ts::AbstractTimeSeries) = print(io, "TimeSeriesData($(ts.name), $(ts.xname), $(ts.yaxis), $(ts.label), $(ts.trial))")
 
 function AggregatedTimeSeriesDataPoint(datapoints::Vector{TimeSeriesDataPoint})
     # check that all xs are the same
