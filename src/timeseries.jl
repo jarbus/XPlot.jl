@@ -99,7 +99,9 @@ function agg(timeseriesdata::Vector{T}) where T <: AbstractTimeSeries
     for tsd in timeseriesdata
         push!(agg_data[(tsd.xname * tsd.label)], tsd)
     end
-    return [AggregatedTimeSeriesData(data) for data in values(agg_data)]
+    agg_tsds = [AggregatedTimeSeriesData(data) for data in values(agg_data)]
+    sort!(agg_tsds, by=tsd -> tsd.label)
+    agg_tsds
 end
 
 
