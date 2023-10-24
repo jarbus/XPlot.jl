@@ -1,3 +1,4 @@
+export BestSortPercentage, InteractionDistanceErrors, SortFits
 abstract type AbstractMetric end
 
 function load(
@@ -6,6 +7,7 @@ function load(
         paths::Vector{String}
     )
     paths = find_datapath_recursively(nc, paths)
+    @assert length(paths) > 0 "No paths found"
 
     vcat([_load(metric, nc, path) for path in paths]...)
 end
@@ -27,6 +29,27 @@ struct InteractionDistanceErrors <: AbstractMetric
 end
 InteractionDistanceErrors(r::UnitRange{Int}) = InteractionDistanceErrors(collect(r))
 
+# TODO: modularize statistical/nonstatistical datapoint loading and per-metric loading
+
+function _load_datapoints(file,path)
+    dp = TimeSeriesDataPoint[]
+    for gen in keys(file["gen"])
+
+        full_path = joinpath("gen/$gen", path)
+        if !haskey(file, full_path)
+            #error("No key $full_path in file")
+            continue
+        end
+        datapoint = TimeSeriesDataPoint(parse(Int, gen),
+                file[full_path],
+                nothing, nothing)
+        push!(dp, datapoint)
+    end
+    @assert length(dp) > 0 "No datapoints found in $path"
+    sort!(dp, by=x->x.x)
+    dp
+end
+
 function _load_statistical_datapoints(file,path)
     dp = TimeSeriesDataPoint[]
     for gen in keys(file["gen"])
@@ -45,6 +68,7 @@ function _load_statistical_datapoints(file,path)
         )
         push!(dp, datapoint)
     end
+    @assert length(dp) > 0 "No datapoints found in $path"
     sort!(dp, by=x->x.x)
     dp
 end
@@ -56,21 +80,85 @@ function _load(
     )
     classname, xname, trial = subdir_naming_scheme(nc, path)
     println("Loading cls=$classname x=$xname trial=$trial")
-    datapoints = Dict{Int, TimeSeriesData}()
+    datapoints = TimeSeriesData[]
 
     jldopen(path, "r") do file
         for distance in iders.distances
-            datapoints[distance] = TimeSeriesData(
+            push!(datapoints, TimeSeriesData(
                 "InteractionDistanceError",
                  _load_statistical_datapoints(file, "tree_stats/dist_int_errors/$distance"),
                 xname,
                 "EstimateError",
                 "distance=$distance",
                 parse(Int, trial)
-            )
+            ))
         end
     end
-    datapoints = collect(values(datapoints))
     datapoints = filter(x -> length(x.data) > 0, datapoints)
     return datapoints
+end
+
+
+struct SortFits <: AbstractMetric end
+struct BestSortPercentage <: AbstractMetric end
+
+
+function _load(
+        ::SortFits,
+        nc::NameConfig,
+        path::String
+    )
+    classname, xname, trial = subdir_naming_scheme(nc, path)
+    println("Loading cls=$classname x=$xname trial=$trial")
+    datapoints = TimeSeriesData[]
+
+    jldopen(path, "r") do file
+        push!(datapoints, TimeSeriesData(
+                 "SortingNetworkFitness",
+                  _load_statistical_datapoints(file, "sorted/sn_fitnesses"),
+                 xname,
+                 "Fitness",
+                 "SortingNetwork",
+                 parse(Int, trial)
+             )
+         )
+
+        push!(datapoints, TimeSeriesData(
+                 "SortingNetworkTestCaseFitness",
+                  _load_statistical_datapoints(file, "sorted/tc_fitnesses"),
+                 xname,
+                 "Fitness",
+                 "TestCase",
+                 parse(Int, trial)
+             )
+        )
+    end
+    datapoints = filter(x -> length(x.data) > 0, datapoints)
+    datapoints
+end
+
+
+
+function _load(
+        ::BestSortPercentage,
+        nc::NameConfig,
+        path::String
+    )
+    classname, xname, trial = subdir_naming_scheme(nc, path)
+    println("Loading cls=$classname x=$xname trial=$trial")
+    datapoints = TimeSeriesData[]
+
+    jldopen(path, "r") do file
+        push!(datapoints, TimeSeriesData(
+                 "BestSortPercentage",
+                  _load_datapoints(file, "sorted/best_sorter_percent"),
+                 xname,
+                 "Percentage",
+                 "",
+                 parse(Int, trial)
+             )
+         )
+    end
+    datapoints = filter(x -> length(x.data) > 0, datapoints)
+    datapoints
 end

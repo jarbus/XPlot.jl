@@ -4,7 +4,8 @@ using StatsBase
 using HypothesisTests
 using Plots
 
-export InteractionDistanceErrors, TimeSeriesData, TimeSeriesPlot, load, agg, plot, NameConfig
+export TimeSeriesData, TimeSeriesPlot, load, agg, plot, NameConfig
+    
 
 include("./name-inference.jl")
 include("./timeseries.jl")
