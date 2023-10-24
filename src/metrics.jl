@@ -24,53 +24,55 @@ function subdir_naming_scheme(nc::NameConfig, path::String)
     classname, xname, trial
 end
 
+function _load_datapoints(file,path;statistical=false)
+    dp = TimeSeriesDataPoint[]
+    for gen in keys(file["gen"])
+
+        full_path = joinpath("gen/$gen", path)
+        if !haskey(file, full_path)
+            #error("No key $full_path in file")
+            continue
+        end
+        if statistical
+            stats = file[full_path]
+            datapoint = TimeSeriesDataPoint(
+                parse(Int, gen),
+                stats["mean"],
+                stats["lower_confidence"],
+                stats["upper_confidence"],
+            )
+        else
+            datapoint = TimeSeriesDataPoint(parse(Int, gen),
+                    file[full_path],
+                    nothing, nothing)
+        end
+        push!(dp, datapoint)
+    end
+    @assert length(dp) > 0 "No datapoints found in $path"
+    sort!(dp, by=x->x.x)
+    dp
+end
+
 struct InteractionDistanceErrors <: AbstractMetric
     distances::Vector{Int}
 end
 InteractionDistanceErrors(r::UnitRange{Int}) = InteractionDistanceErrors(collect(r))
 
-# TODO: modularize statistical/nonstatistical datapoint loading and per-metric loading
+function general_load(
+        f,
+        metric::AbstractMetric,
+        nc::NameConfig,
+        path::String
+    )
+    classname, xname, trial = subdir_naming_scheme(nc, path)
+    println("Loading cls=$classname x=$xname trial=$trial")
+    timeseries = TimeSeriesData[]
 
-function _load_datapoints(file,path)
-    dp = TimeSeriesDataPoint[]
-    for gen in keys(file["gen"])
-
-        full_path = joinpath("gen/$gen", path)
-        if !haskey(file, full_path)
-            #error("No key $full_path in file")
-            continue
-        end
-        datapoint = TimeSeriesDataPoint(parse(Int, gen),
-                file[full_path],
-                nothing, nothing)
-        push!(dp, datapoint)
+    jldopen(path, "r") do file
+        f(file, metric, xname, trial, timeseries)
     end
-    @assert length(dp) > 0 "No datapoints found in $path"
-    sort!(dp, by=x->x.x)
-    dp
-end
-
-function _load_statistical_datapoints(file,path)
-    dp = TimeSeriesDataPoint[]
-    for gen in keys(file["gen"])
-
-        full_path = joinpath("gen/$gen", path)
-        if !haskey(file, full_path)
-            #error("No key $full_path in file")
-            continue
-        end
-        stats = file[full_path]
-        datapoint = TimeSeriesDataPoint(
-            parse(Int, gen),
-            stats["mean"],
-            stats["lower_confidence"],
-            stats["upper_confidence"],
-        )
-        push!(dp, datapoint)
-    end
-    @assert length(dp) > 0 "No datapoints found in $path"
-    sort!(dp, by=x->x.x)
-    dp
+    timeseries = filter(x -> length(x.data) > 0, timeseries)
+    return timeseries
 end
 
 function _load(
@@ -78,15 +80,11 @@ function _load(
         nc::NameConfig,
         path::String
     )
-    classname, xname, trial = subdir_naming_scheme(nc, path)
-    println("Loading cls=$classname x=$xname trial=$trial")
-    datapoints = TimeSeriesData[]
-
-    jldopen(path, "r") do file
+    general_load(iders, nc, path) do file, iders, xname, trial, timeseries
         for distance in iders.distances
-            push!(datapoints, TimeSeriesData(
+            push!(timeseries, TimeSeriesData(
                 "InteractionDistanceError",
-                 _load_statistical_datapoints(file, "tree_stats/dist_int_errors/$distance"),
+                 _load_datapoints(file, "tree_stats/dist_int_errors/$distance"; statistical=true),
                 xname,
                 "EstimateError",
                 "distance=$distance",
@@ -94,8 +92,6 @@ function _load(
             ))
         end
     end
-    datapoints = filter(x -> length(x.data) > 0, datapoints)
-    return datapoints
 end
 
 
@@ -104,18 +100,14 @@ struct BestSortPercentage <: AbstractMetric end
 
 
 function _load(
-        ::SortFits,
+        met::SortFits,
         nc::NameConfig,
         path::String
     )
-    classname, xname, trial = subdir_naming_scheme(nc, path)
-    println("Loading cls=$classname x=$xname trial=$trial")
-    datapoints = TimeSeriesData[]
-
-    jldopen(path, "r") do file
-        push!(datapoints, TimeSeriesData(
+    general_load(met, nc, path) do file, met, xname, trial, timeseries
+        push!(timeseries, TimeSeriesData(
                  "SortingNetworkFitness",
-                  _load_statistical_datapoints(file, "sorted/sn_fitnesses"),
+                  _load_datapoints(file, "sorted/sn_fitnesses"; statistical=true),
                  xname,
                  "Fitness",
                  "SortingNetwork",
@@ -123,9 +115,9 @@ function _load(
              )
          )
 
-        push!(datapoints, TimeSeriesData(
+        push!(timeseries, TimeSeriesData(
                  "SortingNetworkTestCaseFitness",
-                  _load_statistical_datapoints(file, "sorted/tc_fitnesses"),
+                  _load_datapoints(file, "sorted/tc_fitnesses"; statistical=true),
                  xname,
                  "Fitness",
                  "TestCase",
@@ -133,23 +125,19 @@ function _load(
              )
         )
     end
-    datapoints = filter(x -> length(x.data) > 0, datapoints)
-    datapoints
 end
 
 
 
 function _load(
-        ::BestSortPercentage,
+        met::BestSortPercentage,
         nc::NameConfig,
         path::String
     )
-    classname, xname, trial = subdir_naming_scheme(nc, path)
-    println("Loading cls=$classname x=$xname trial=$trial")
-    datapoints = TimeSeriesData[]
 
-    jldopen(path, "r") do file
-        push!(datapoints, TimeSeriesData(
+
+    general_load(BestSortPercentage(), nc, path) do file, sf, xname, trial, timeseries
+        push!(timeseries, TimeSeriesData(
                  "BestSortPercentage",
                   _load_datapoints(file, "sorted/best_sorter_percent"),
                  xname,
@@ -159,6 +147,4 @@ function _load(
              )
          )
     end
-    datapoints = filter(x -> length(x.data) > 0, datapoints)
-    datapoints
 end
