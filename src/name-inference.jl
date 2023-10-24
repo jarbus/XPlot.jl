@@ -15,11 +15,8 @@ function find_datapath_recursively(nc::NameConfig, path::String)
     paths = String[]
     if isdir(path) 
         for entry in readdir(path)
-            if entry == "." || entry == ".."
-                continue 
-            end
             for path in find_datapath_recursively(nc, joinpath(path, entry))
-                push!(paths, path)
+                push!(paths, abspath(path))
             end
         end
     end
