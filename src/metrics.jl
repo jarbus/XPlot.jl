@@ -27,6 +27,28 @@ struct InteractionDistanceErrors <: AbstractMetric
 end
 InteractionDistanceErrors(r::UnitRange{Int}) = InteractionDistanceErrors(collect(r))
 
+function _load_statistical_datapoints(file,path)
+    dp = TimeSeriesDataPoint[]
+    for gen in keys(file["gen"])
+
+        full_path = joinpath("gen/$gen", path)
+        if !haskey(file, full_path)
+            #error("No key $full_path in file")
+            continue
+        end
+        stats = file[full_path]
+        datapoint = TimeSeriesDataPoint(
+            parse(Int, gen),
+            stats["mean"],
+            stats["lower_confidence"],
+            stats["upper_confidence"],
+        )
+        push!(dp, datapoint)
+    end
+    sort!(dp, by=x->x.x)
+    dp
+end
+
 function _load(
         iders::InteractionDistanceErrors,
         nc::NameConfig,
@@ -34,31 +56,21 @@ function _load(
     )
     classname, xname, trial = subdir_naming_scheme(nc, path)
     println("Loading cls=$classname x=$xname trial=$trial")
-    datapoints = Dict{Int, TimeSeriesData}(
-        d => TimeSeriesData("InteractionDistanceError",[], xname, "EstimateError", "distance=$d", parse(Int, trial)) for d in iders.distances)
+    datapoints = Dict{Int, TimeSeriesData}()
 
     jldopen(path, "r") do file
-        for gen in keys(file["gen"])
-            for distance in iders.distances
-                if !haskey(file["gen/$gen/tree_stats/dist_int_errors"], string(distance))
-                    continue
-                end
-                stats = file["gen/$gen/tree_stats/dist_int_errors/$distance"] 
-                datapoint = TimeSeriesDataPoint(
-                    parse(Int, gen),
-                    stats["mean"],
-                    stats["lower_confidence"],
-                    stats["upper_confidence"],
-                )
-                push!(datapoints[distance].data, datapoint)
-            end
+        for distance in iders.distances
+            datapoints[distance] = TimeSeriesData(
+                "InteractionDistanceError",
+                 _load_statistical_datapoints(file, "tree_stats/dist_int_errors/$distance"),
+                xname,
+                "EstimateError",
+                "distance=$distance",
+                parse(Int, trial)
+            )
         end
     end
     datapoints = collect(values(datapoints))
     datapoints = filter(x -> length(x.data) > 0, datapoints)
-    # sort datapoints by x
-    for iderr in datapoints
-        sort!(iderr.data, by=x->x.x)
-    end
     return datapoints
 end
