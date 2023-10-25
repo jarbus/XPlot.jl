@@ -1,4 +1,4 @@
-export BestSortPercentage, InteractionDistanceErrors, SortFits
+export BestSortPercentage, InteractionDistanceErrors, SortFits, BestSortSize
 abstract type AbstractMetric end
 
 function load(
@@ -97,6 +97,7 @@ end
 
 struct SortFits <: AbstractMetric end
 struct BestSortPercentage <: AbstractMetric end
+struct BestSortSize <: AbstractMetric end
 
 
 function _load(
@@ -134,14 +135,30 @@ function _load(
         nc::NameConfig,
         path::String
     )
-
-
     general_load(BestSortPercentage(), nc, path) do file, sf, xname, trial, timeseries
         push!(timeseries, TimeSeriesData(
                  "BestSortPercentage",
                   _load_datapoints(file, "sorted/best_sorter_percent"),
                  xname,
                  "Percentage",
+                 "",
+                 parse(Int, trial)
+             )
+         )
+    end
+end
+
+function _load(
+        met::BestSortSize,
+        nc::NameConfig,
+        path::String
+    )
+    general_load(BestSortSize(), nc, path) do file, met, xname, trial, timeseries
+        push!(timeseries, TimeSeriesData(
+                 "BestSortSize",
+                  _load_datapoints(file, "sorted/best_sorter_size"),
+                 xname,
+                 "Number of swaps",
                  "",
                  parse(Int, trial)
              )
