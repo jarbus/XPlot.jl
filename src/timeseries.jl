@@ -50,8 +50,14 @@ function AggregatedTimeSeriesDataPoint(datapoints::Vector{TimeSeriesDataPoint})
 
     vs = [d.value for d in datapoints]
     value = mean(vs)
-    test = OneSampleTTest(vs)
-    upper_bound, lower_bound = confint(test)
+    upper_bound, lower_bound = nothing, nothing
+    try
+        test = OneSampleTTest(vs)
+        upper_bound, lower_bound = confint(test)
+    catch
+        println("Warning: could not compute confidence interval for $(datapoints)")
+        upper_bound, lower_bound = value, value
+    end
     count = length(datapoints)
     return AggregatedTimeSeriesDataPoint(x, value, lower_bound, upper_bound, count)
 end
@@ -82,7 +88,8 @@ function AggregatedTimeSeriesData(
     end
     # aggregate data over time points
     xs = sort!(collect(keys(agg_data)))
-    datapoints = [AggregatedTimeSeriesDataPoint(agg_data[x]) for x in xs]
+    # filter out all agg_data that are not of length data
+    datapoints = [AggregatedTimeSeriesDataPoint(agg_data[x]) for x in xs if length(agg_data[x]) == length(data)]
     agg_data = AggregatedTimeSeriesData(name, datapoints, xname, yaxis, label)
     agg_data
 end
