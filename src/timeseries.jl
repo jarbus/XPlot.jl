@@ -106,8 +106,8 @@ end
 function Plots.plot(p::AbstractTimeSeries; kwargs...)
     xs = [d.x for d in p.data]
     ys = [d.value for d in p.data]
-    upper = [d.upper_bound - d.value for d in p.data]
-    lower = [d.value - d.lower_bound for d in p.data]
+    upper = [d.upper_bound isa Float64 ? d.upper_bound - d.value : 0 for d in p.data]
+    lower = [d.upper_bound isa Float64 ? d.value - d.lower_bound : 0 for d in p.data]
     plot!(xs, ys, ribbon=(upper, lower), label=p.label; kwargs...)
 end
 function Plots.plot(timeseriess::Vector{<:AbstractTimeSeries}; kwargs...)
