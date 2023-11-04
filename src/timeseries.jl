@@ -103,6 +103,37 @@ function agg(timeseriesdata::Vector{T}) where T <: AbstractTimeSeries
 end
 
 
+rolling(timeseries::Vector{<:AbstractTimeSeries}; window_size=10) = [rolling(ts, window_size=window_size) for ts in timeseries]
+
+function rolling(timeseries::AggregatedTimeSeriesData; window_size=10)
+    data = timeseries.data
+    new_data = []
+    for i in window_size:length(data)
+
+        datapoints = data[i-window_size+1:i]
+        x = datapoints[end].x
+        value = mean([d.value for d in datapoints])
+        count = sum([d.count for d in datapoints])
+        push!(new_data, AggregatedTimeSeriesDataPoint(x, value, 0, 0, count))
+    end
+    return AggregatedTimeSeriesData(timeseries.name, new_data, timeseries.xname, timeseries.yaxis, timeseries.label)
+
+end
+
+function rolling(timeseries::TimeSeriesData; window_size=10) 
+    data = timeseries.data
+    new_data = []
+    for i in window_size:length(data)
+        datapoints = data[i-window_size+1:i]
+        x = datapoints[end].x
+        value = mean([d.value for d in datapoints])
+        push!(new_data, TimeSeriesDataPoint(x, value, nothing, nothing))
+    end
+    return TimeSeriesData(timeseries.name, new_data, timeseries.xname, timeseries.yaxis, timeseries.label, timeseries.trial)
+end
+
+
+
 function Plots.plot(p::AbstractTimeSeries; kwargs...)
     xs = [d.x for d in p.data]
     ys = [d.value for d in p.data]
