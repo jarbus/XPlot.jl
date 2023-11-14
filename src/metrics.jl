@@ -1,4 +1,3 @@
-export BestSortPercentage, InteractionDistanceErrors, SortFits, BestSortSize
 abstract type AbstractMetric end
 
 function load(
@@ -46,17 +45,13 @@ function _load_datapoints(file,path;statistical=false)
                     file[full_path],
                     nothing, nothing)
         end
+        isnan(datapoint.value) && continue
         push!(dp, datapoint)
     end
-    @assert length(dp) > 0 "No datapoints found in $path"
+    length(dp) == 0 && @warn("No datapoints found in $path")
     sort!(dp, by=x->x.x)
     dp
 end
-
-struct InteractionDistanceErrors <: AbstractMetric
-    distances::Vector{Int}
-end
-InteractionDistanceErrors(r::UnitRange{Int}) = InteractionDistanceErrors(collect(r))
 
 function general_load(
         f,
@@ -73,95 +68,4 @@ function general_load(
     end
     timeseries = filter(x -> length(x.data) > 0, timeseries)
     return timeseries
-end
-
-function _load(
-        iders::InteractionDistanceErrors,
-        nc::NameConfig,
-        path::String
-    )
-    general_load(iders, nc, path) do file, iders, xname, trial, timeseries
-        for distance in iders.distances
-            push!(timeseries, TimeSeriesData(
-                "InteractionDistanceError",
-                 _load_datapoints(file, "tree_stats/dist_int_errors/$distance"; statistical=true),
-                xname,
-                "EstimateError",
-                "distance=$distance",
-                parse(Int, trial)
-            ))
-        end
-    end
-end
-
-
-struct SortFits <: AbstractMetric end
-struct BestSortPercentage <: AbstractMetric end
-struct BestSortSize <: AbstractMetric end
-
-
-function _load(
-        met::SortFits,
-        nc::NameConfig,
-        path::String
-    )
-    general_load(met, nc, path) do file, met, xname, trial, timeseries
-        push!(timeseries, TimeSeriesData(
-                 "SortingNetworkFitness",
-                  _load_datapoints(file, "sorted/sn_fitnesses"; statistical=true),
-                 xname,
-                 "Fitness",
-                 "SortingNetwork",
-                 parse(Int, trial)
-             )
-         )
-
-        push!(timeseries, TimeSeriesData(
-                 "SortingNetworkTestCaseFitness",
-                  _load_datapoints(file, "sorted/tc_fitnesses"; statistical=true),
-                 xname,
-                 "Fitness",
-                 "TestCase",
-                 parse(Int, trial)
-             )
-        )
-    end
-end
-
-
-
-function _load(
-        met::BestSortPercentage,
-        nc::NameConfig,
-        path::String
-    )
-    general_load(BestSortPercentage(), nc, path) do file, sf, xname, trial, timeseries
-        push!(timeseries, TimeSeriesData(
-                 "BestSortPercentage",
-                  _load_datapoints(file, "sorted/best_sorter_percent"),
-                 xname,
-                 "Percentage",
-                 "",
-                 parse(Int, trial)
-             )
-         )
-    end
-end
-
-function _load(
-        met::BestSortSize,
-        nc::NameConfig,
-        path::String
-    )
-    general_load(BestSortSize(), nc, path) do file, met, xname, trial, timeseries
-        push!(timeseries, TimeSeriesData(
-                 "BestSortSize",
-                  _load_datapoints(file, "sorted/best_sorter_size"),
-                 xname,
-                 "Number of swaps",
-                 "",
-                 parse(Int, trial)
-             )
-         )
-    end
 end
