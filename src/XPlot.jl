@@ -13,4 +13,5 @@ include("./metrics.jl")
 include("./metrics/iderrs.jl")
 include("./metrics/sort.jl")
 include("./metrics/phylogeneticestimator.jl")
+include("./metrics/genotypesum.jl")
 end

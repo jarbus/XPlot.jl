@@ -24,7 +24,7 @@ function _load(dists::EstimatorDistanceStatistics,
                  _load_datapoints(file, "phylogeneticestimatorstats/$estimator/dist_stats"; statistical=true),
                 xname,
                 "Distances",
-                xname,
+                xname * " " * estimator,
                 parse(Int, trial)
             ))
         end
@@ -43,7 +43,7 @@ function _load(errs::EstimatorErrorStatistics,
                  _load_datapoints(file, "phylogeneticestimatorstats/$estimator/error_stats"; statistical=true),
                 xname,
                 "Distances",
-                xname,
+                xname * " " * estimator,
                 parse(Int, trial)
             ))
         end
@@ -62,7 +62,7 @@ function _load(decorr::DistanceErrorCorrelation,
                  _load_datapoints(file, "phylogeneticestimatorstats/$estimator/decorr";),
                 xname,
                 "DistanceErrorCorrelation",
-                xname,
+                xname * " " * estimator,
                 parse(Int, trial)
             ))
         end
