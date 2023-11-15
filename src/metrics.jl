@@ -23,11 +23,11 @@ function subdir_naming_scheme(nc::NameConfig, path::String)
     classname, xname, trial
 end
 
-function _load_datapoints(file,path;statistical=false)
+function _load_datapoints(file,path;statistical=false, head="gen")
     dp = TimeSeriesDataPoint[]
-    for gen in keys(file["gen"])
+    for step in keys(file[head])
 
-        full_path = joinpath("gen/$gen", path)
+        full_path = joinpath(head, step, path)
         if !haskey(file, full_path)
             #error("No key $full_path in file")
             continue
@@ -35,13 +35,13 @@ function _load_datapoints(file,path;statistical=false)
         if statistical
             stats = file[full_path]
             datapoint = TimeSeriesDataPoint(
-                parse(Int, gen),
+                parse(Int, step),
                 stats["mean"],
                 stats["lower_confidence"],
                 stats["upper_confidence"],
             )
         else
-            datapoint = TimeSeriesDataPoint(parse(Int, gen),
+            datapoint = TimeSeriesDataPoint(parse(Int, step),
                     file[full_path],
                     nothing, nothing)
         end
