@@ -152,7 +152,7 @@ end
 
 function Plots.plot!(timeseriess::Vector{<:AbstractTimeSeries}; kwargs...)
     for timeseries in timeseriess
-        p = plot(timeseries; kwargs...)
+        p = plot!(timeseries; kwargs...)
     end
     p
 end
