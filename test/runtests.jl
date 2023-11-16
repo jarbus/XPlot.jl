@@ -4,6 +4,7 @@ using Test
 
 nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
 
+@testset "Tests" begin
 @testset "NameInference" begin
     paths = ["x/interaction-distance/1/data/archive.jld2",
         "x/interaction-distance/2/data/archive.jld2"]
@@ -41,16 +42,14 @@ end
     # We probably want to move this into PhyloCoEvo at some point
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path * "1"])
     @test length(iderrs) == 3
-    tsp = XPlot.TimeSeriesPlot(iderrs)
-    plot(tsp)
+    plot(iderrs)
     savefig("$figname")
     # clear current plot
     Plots.plot()
     # Load two iderrs
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
     @test length(iderrs) == 6
-    tsp = XPlot.TimeSeriesPlot(iderrs)
-    plot(tsp)
+    plot(iderrs)
     figname = joinpath(@__DIR__, "x/interaction-distance/fig2.png")
     savefig("$figname")
     # clear current plot
@@ -60,8 +59,7 @@ end
     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
     agg_iderrs = XPlot.agg(iderrs)
     @test length(agg_iderrs) == 3
-    tsp = XPlot.TimeSeriesPlot("Two agg", agg_iderrs)
-    plot(tsp)
+    plot(agg_iderrs, title="Two agg")
     figname = joinpath(@__DIR__, "x/interaction-distance/fig3.png")
     savefig("$figname")
     # clear current plot
@@ -77,11 +75,9 @@ end
     tsd2 = XPlot.TimeSeriesData("dummy-data-2", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data-2",1)
     @testset "TimeSeriesPlot" begin
         # Plot two different time series
-        tsp = XPlot.TimeSeriesPlot("test", [tsd1a, tsd2])
-        plot(tsp)
+        plot([tsd1a, tsd2], title="test")
         figname = joinpath(@__DIR__, "dummy-figs/dummy-data-1a,2.png")
         savefig(figname)
-        @test length(tsp.data) == 2
         @test isfile(figname)
         # clear current plot
         Plots.plot()
@@ -111,16 +107,17 @@ end
         @test agg_dd2.data[1].x == 1 && agg_dd2.data[1].value == 5 && agg_dd2.data[1].count == n_samples
         @test agg_dd2.data[2].x == 2 && agg_dd2.data[2].value == 6 && agg_dd2.data[2].count == n_samples
         @test agg_dd2.data[3].x == 3 && agg_dd2.data[3].value == 6 && agg_dd2.data[3].count == n_samples
-        plot(XPlot.TimeSeriesPlot("test", [agg_dd1]))
+        XPlot.plot(agg_dd1, title="Agg")
         savefig(figname)
         @test isfile(figname)
         # clear current plot
         Plots.plot()
         figname2 = joinpath(@__DIR__, "dummy-figs/agg-dummy-data-1a,1b,2.png")
-        plot(XPlot.TimeSeriesPlot("test", XPlot.agg(vcat(dd1, dd2))))
+        plot(XPlot.agg(vcat(dd1, dd2)), title="test")
         savefig(figname2)
         @test isfile(figname2)
         # clear current plot
         Plots.plot()
     end
+end
 end

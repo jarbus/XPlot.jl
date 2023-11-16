@@ -4,7 +4,7 @@ using StatsBase
 using HypothesisTests
 using Plots
 
-export TimeSeriesData, TimeSeriesPlot, load, agg, plot, NameConfig, rolling
+export TimeSeriesData, load, agg, plot, NameConfig, rolling
     
 
 include("./name-inference.jl")

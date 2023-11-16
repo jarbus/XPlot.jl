@@ -33,12 +33,6 @@ Base.@kwdef struct AggregatedTimeSeriesData <: AbstractTimeSeries
     label::String = ""
 end
 
-struct TimeSeriesPlot
-    name::String
-    data::Vector{AbstractTimeSeries}
-end
-TimeSeriesPlot(data::Vector{<:AbstractTimeSeries}) = TimeSeriesPlot("",data)
-
 
 Base.show(io::IO, datapoint::AbstractTimeSeriesDataPoint) = print(io, "($(round(datapoint.x, digits=2)), $(round(datapoint.value, digits=2)))")
 Base.show(io::IO, ts::AbstractTimeSeries) = print(io, "TimeSeriesData($(ts.name), $(ts.xname), $(ts.yaxis), $(ts.label), $(ts.trial))")
@@ -136,22 +130,29 @@ end
 
 
 
-function Plots.plot(p::AbstractTimeSeries; kwargs...)
+function Plots.plot!(p::AbstractTimeSeries; kwargs...)
     xs = [d.x for d in p.data]
     ys = [d.value for d in p.data]
     upper = [d.upper_bound isa Float64 ? d.upper_bound - d.value : 0 for d in p.data]
     lower = [d.upper_bound isa Float64 ? d.value - d.lower_bound : 0 for d in p.data]
     plot!(xs, ys, ribbon=(upper, lower), label=p.label; kwargs...)
 end
+function Plots.plot(timeseries::AbstractTimeSeries; kwargs...)
+    p = plot(;kwargs...)
+    p = plot!(timeseries; kwargs...)
+    p
+end
 function Plots.plot(timeseriess::Vector{<:AbstractTimeSeries}; kwargs...)
     p = plot(;kwargs...)
+    for timeseries in timeseriess
+        p = plot!(timeseries; kwargs...)
+    end
+    p
+end
+
+function Plots.plot!(timeseriess::Vector{<:AbstractTimeSeries}; kwargs...)
     for timeseries in timeseriess
         p = plot(timeseries; kwargs...)
     end
     p
 end
-
-function Plots.plot(p::TimeSeriesPlot; kwargs...)
-    Plots.plot(p.data; title=p.name, kwargs...)
-end
-
