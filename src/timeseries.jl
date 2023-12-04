@@ -152,7 +152,14 @@ end
 
 function Plots.plot!(timeseriess::Vector{<:AbstractTimeSeries}; kwargs...)
     for timeseries in timeseriess
-        p = plot!(timeseries; kwargs...)
+        plot!(timeseries; kwargs...)
     end
-    p
+end
+
+function Plots.plot!(els::Vector, kwargs...)
+    # Function to recursively plot elements, 
+    # so we can plot vecs of vecs of time series
+    for el in els
+        plot!(el; kwargs...)
+    end
 end
