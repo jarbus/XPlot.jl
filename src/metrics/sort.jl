@@ -1,8 +1,9 @@
-export BestSortPercentage, InteractionDistanceErrors, SortFits, BestSortSize
+export BestSortPercentage, InteractionDistanceErrors, SortFits, BestSortSize, AllPassPercentage
 
 struct SortFits <: AbstractMetric end
 struct BestSortPercentage <: AbstractMetric end
 struct BestSortSize <: AbstractMetric end
+struct AllPassPercentage <: AbstractMetric end
 
 
 function _load(
@@ -40,13 +41,13 @@ function _load(
         nc::NameConfig,
         path::String
     )
-    general_load(BestSortPercentage(), nc, path) do file, sf, xname, trial, timeseries
+    general_load(met, nc, path) do file, sf, xname, trial, timeseries
         push!(timeseries, TimeSeriesData(
                  "BestSortPercentage",
-                  _load_datapoints(file, "sorted/best_sorter_percent"),
+                  _load_datapoints(file, "sorted/best_percent"),
                  xname,
                  "Percentage",
-                 "",
+                 xname,
                  parse(Int, trial)
              )
          )
@@ -58,13 +59,31 @@ function _load(
         nc::NameConfig,
         path::String
     )
-    general_load(BestSortSize(), nc, path) do file, met, xname, trial, timeseries
+    general_load(met, nc, path) do file, met, xname, trial, timeseries
         push!(timeseries, TimeSeriesData(
                  "BestSortSize",
-                  _load_datapoints(file, "sorted/best_sorter_size"),
+                  _load_datapoints(file, "sorted/best_size"),
                  xname,
                  "Number of swaps",
-                 "",
+                 xname,
+                 parse(Int, trial)
+             )
+         )
+    end
+end
+
+function _load(
+        met::AllPassPercentage,
+        nc::NameConfig,
+        path::String
+    )
+    general_load(met, nc, path) do file, met, xname, trial, timeseries
+        push!(timeseries, TimeSeriesData(
+                 "AllPassPercentage",
+                  _load_datapoints(file, "sorted/allpass_percent"),
+                 xname,
+                 "Percentage",
+                 xname,
                  parse(Int, trial)
              )
          )
