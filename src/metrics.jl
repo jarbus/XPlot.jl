@@ -1,5 +1,14 @@
 abstract type AbstractMetric end
 
+
+function get_species_matchups(file, metric="phylogeneticestimatorstats"; head="gen")
+    # get the largest number string
+    max_gen = keys(file[head]) |> collect |> x->sort(x, by=y->parse(Int, y)) |> last
+    # get all species in the last generation
+    species = keys(file["$head/$max_gen/$metric"]) |> collect
+    species
+end
+
 function load(
         metric::AbstractMetric,
         nc::NameConfig,

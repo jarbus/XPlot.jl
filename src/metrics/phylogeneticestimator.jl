@@ -4,13 +4,6 @@ struct EstimatorDistanceStatistics <: AbstractMetric end
 struct EstimatorErrorStatistics <: AbstractMetric end
 struct DistanceErrorCorrelation <: AbstractMetric end
 
-function get_species_matchups(file)
-    # get the largest number string
-    max_gen = keys(file["gen"]) |> collect |> x->sort(x, by=y->parse(Int, y)) |> last
-    # get all species in the last generation
-    species = keys(file["gen/$max_gen/phylogeneticestimatorstats"]) |> collect
-    species
-end
 
 function _load(dists::EstimatorDistanceStatistics,
         nc::NameConfig,

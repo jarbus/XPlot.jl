@@ -1,8 +1,6 @@
 export GenotypeSum
 
-struct GenotypeSum <: AbstractMetric 
-    species_ids::Vector{String}
-end
+struct GenotypeSum <: AbstractMetric end
 
 function _load(
         gs::GenotypeSum,
@@ -10,7 +8,8 @@ function _load(
         path::String
     )
     general_load(gs, nc, path) do file, gs, xname, trial, timeseries
-        for sid in gs.species_ids
+        species = get_species_matchups(file,"GenotypeSum", head="measurements")
+        for sid in species
             push!(timeseries, TimeSeriesData(
                 "GenotypeSum",
                  _load_datapoints(file, "GenotypeSum/$sid"; statistical=true,head="measurements"),
