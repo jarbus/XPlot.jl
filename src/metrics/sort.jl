@@ -1,9 +1,10 @@
-export BestSortPercentage, InteractionDistanceErrors, SortFits, BestSortSize, AllPassPercentage
+export BestSortPercentage, InteractionDistanceErrors, SortFits, BestSortSize, AllPassPercentage, PerfectPercentage
 
 struct SortFits <: AbstractMetric end
 struct BestSortPercentage <: AbstractMetric end
 struct BestSortSize <: AbstractMetric end
 struct AllPassPercentage <: AbstractMetric end
+struct PerfectPercentage <: AbstractMetric end
 
 
 function _load(
@@ -83,6 +84,25 @@ function _load(
                   _load_datapoints(file, "sorted/allpass_percent"),
                  xname,
                  "Percentage",
+                 xname,
+                 parse(Int, trial)
+             )
+         )
+    end
+end
+
+
+function _load(
+        met::PerfectPercentage,
+        nc::NameConfig,
+        path::String
+    )
+    general_load(met, nc, path) do file, met, xname, trial, timeseries
+        push!(timeseries, TimeSeriesData(
+                 "PerfectPercentage",
+                  _load_datapoints(file, "sorted/perfect_percent"),
+                 xname,
+                 "Perfect Percentage",
                  xname,
                  parse(Int, trial)
              )
