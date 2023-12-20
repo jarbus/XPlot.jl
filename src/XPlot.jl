@@ -15,4 +15,5 @@ include("./metrics/sort.jl")
 include("./metrics/phylogeneticestimator.jl")
 include("./metrics/genotypesum.jl")
 include("./metrics/genotypesize.jl")
+include("./metrics/estimatecacheevalsample.jl")
 end
