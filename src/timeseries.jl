@@ -46,8 +46,9 @@ function AggregatedTimeSeriesDataPoint(datapoints::Vector{TimeSeriesDataPoint})
     value = mean(vs)
     upper_bound, lower_bound = nothing, nothing
     try
-        test = OneSampleTTest(vs)
-        upper_bound, lower_bound = confint(test)
+        test = bootstrap(mean, vs, BasicSampling(1000))
+        ci = confint(test, PercentileConfInt(0.95))[1]
+        value, lower_bound, upper_bound = ci
     catch
         println("Warning: could not compute confidence interval for $(datapoints)")
         upper_bound, lower_bound = value, value

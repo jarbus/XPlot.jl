@@ -2,6 +2,7 @@ module XPlot
 using JLD2
 using StatsBase
 using HypothesisTests
+using Bootstrap
 using Plots
 
 export TimeSeriesData, load, agg, plot, plot!, NameConfig, rolling
