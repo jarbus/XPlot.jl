@@ -6,6 +6,7 @@ using Bootstrap
 using Plots
 
 export TimeSeriesData, load, agg, plot, plot!, NameConfig, rolling
+export kruskal_wallis, wilcoxon
     
 
 include("./name-inference.jl")

@@ -1,10 +1,10 @@
 using XPlot
 using Plots
 using Test
+using HypothesisTests
 
 nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
 
-@testset "Tests" begin
 @testset "NameInference" begin
     paths = ["x/interaction-distance/1/data/archive.jld2",
         "x/interaction-distance/2/data/archive.jld2"]
@@ -120,4 +120,59 @@ end
         Plots.plot()
     end
 end
+
+@testset "Kruskall-Wallis" begin
+    # Test to ensure that data is getting extracted correctly
+    # from TimeSeriesDataPoints for the wilcoxon test
+
+    # example from
+    # https://www.statology.org/kruskal-wallis-test/
+
+    # slight difference in the p-value compared to the
+    # example on the website, but I trust the
+    # HypothesisTests.jl 
+    data = [78 71 57; 65 66 88; 63 56 58; 44 40 78; 50 55 65; 78 31 61; 70 45 62; 61 66 44; 50 47 48; 44 42 77]
+    # convert each column to a vector
+    cols = [data[:,i] for i in 1:size(data, 2)]
+    # convert each column to a vector of vectors
+    # of TimeSeriesDataPoints with x=1 and a value
+    # equal to the value in the column
+    datapoints = [[XPlot.TimeSeriesDataPoint(1, v, 0, 0) for v in col] for col in cols]
+    vvts = [[XPlot.TimeSeriesData("dummy-data",
+                                  [dist[i], XPlot.TimeSeriesDataPoint(3, 1, 0, 0)],
+                                         "x", "y", "dummy-data", 1) 
+                        for i in eachindex(dist)]
+                        for dist in datapoints]
+
+
+    # perform kruskal-wallis test
+    p1 = XPlot.kruskal_wallis(vvts, 1)
+    p2 = KruskalWallisTest(cols...) |> pvalue
+    @test p1 ≈ p2 
+    @test p1 ≈ 0.21 atol=0.01
+end
+
+@testset "Wilcoxon" begin
+    # Test to ensure that data is getting extracted correctly
+    # from TimeSeriesDataPoints for the wilcoxon test
+    # https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test
+    data = [
+        125 115 130 140 140 115 140 125 140 135;
+        110 122 125 120 140 124 123 137 135 145
+    ]
+    # create two vectors of TimeSeriesDataPoints
+    # with x=1 and a value equal to the value in the column
+    vvts = [[XPlot.TimeSeriesData("dummy-data",
+                    [XPlot.TimeSeriesDataPoint(1, v, 0, 0)
+                        XPlot.TimeSeriesDataPoint(2, v+1, 0, 0) ],
+                        "x", "y", "dummy-data", 1) 
+                    for v in row]
+                    for row in eachrow(data)]
+
+
+    p1 = XPlot.wilcoxon(vvts[1], vvts[2], 1)
+    p2 = SignedRankTest(data[1,:], data[2,:]) |> pvalue
+    @test p1 ≈ p2
+    @test p1 ≈ 0.61 atol=0.1 # slightly different from the wikipedia example,
+                             # but I'm not going to question HypothesisTests.jl
 end

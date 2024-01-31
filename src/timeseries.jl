@@ -99,6 +99,33 @@ function agg(timeseriesdata::Vector{T}) where T <: AbstractTimeSeries
     agg_tsds
 end
 
+# perform kruskal-wallis test on time series data
+function kruskal_wallis(vvts::Vector{<:Vector{<:AbstractTimeSeries}}, x::Int, correction=:bonferroni)
+    """Arguments:
+    vvts: vector of vectors of time series data, where each element of the outer vector
+    is a datapoint from the same time series, but from different trials
+    x: the time point at which to perform the test
+    correction: the correction to use for multiple comparisons
+    """
+    # create a vector of vectors of values at time x
+    values = [[d.value 
+        for ts in vts 
+        for d in ts.data
+        if d.x == x] 
+            for vts in vvts]
+    KruskalWallisTest(values...) |> pvalue
+end
+
+
+function wilcoxon(ts1::Vector{<:AbstractTimeSeries},
+                  ts2::Vector{<:AbstractTimeSeries},
+                  x::Int)
+    # get values at time x
+    values1 = [d.value for ts in ts1 for d in ts.data if d.x == x]
+    values2 = [d.value for ts in ts2 for d in ts.data if d.x == x]
+    # perform wilcoxon test (aka mann-whitney u test)
+    pvalue(SignedRankTest(values1, values2))
+end
 
 rolling(timeseries::Vector{<:AbstractTimeSeries}; window_size=10) = [rolling(ts, window_size=window_size) for ts in timeseries]
 
