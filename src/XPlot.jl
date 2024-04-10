@@ -5,8 +5,8 @@ using HypothesisTests
 using Bootstrap
 using Plots
 
-export TimeSeriesData, load, agg, plot, plot!, NameConfig, rolling
-export kruskal_wallis, wilcoxon
+export TimeSeriesData, load, group, agg, plot, plot!, NameConfig, rolling
+export kruskal_wallis, wilcoxon, run_all_pairwise_wilcoxon, glass_delta, compute_all_glass_deltas
     
 
 include("./name-inference.jl")
