@@ -9,3 +9,8 @@ A plotting program for plotting and comparing aggregate experimental data in the
 * needs to support plotting a single data source
 * needs to support aggregation of n data sources
 * needs to support plotting n data sources in n subplots
+
+Guidelines:
+===========
+
+- metric loading must be defined in a separate module file
