@@ -45,7 +45,7 @@ function _load(
     general_load(met, nc, path) do file, sf, xname, trial, timeseries
         push!(timeseries, TimeSeriesData(
                  "BestSortPercentage",
-                  _load_datapoints(file, "sorted/best_percent"),
+                 _load_datapoints(file, "sorted/best_percent"),
                  xname,
                  "Percentage",
                  xname,
@@ -98,9 +98,11 @@ function _load(
         path::String
     )
     general_load(met, nc, path) do file, met, xname, trial, timeseries
+        datapoints = _load_datapoints(file, "sorted/perfect_percent")
+        datapointsx100 = [TimeSeriesDataPoint(dp.x, dp.value*100, dp.lower_bound, dp.upper_bound) for dp in datapoints]
         push!(timeseries, TimeSeriesData(
                  "PerfectPercentage",
-                  _load_datapoints(file, "sorted/perfect_percent"),
+                 datapointsx100,
                  xname,
                  "Perfect Percentage",
                  xname,

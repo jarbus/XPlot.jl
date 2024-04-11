@@ -12,10 +12,5 @@ export kruskal_wallis, wilcoxon, run_all_pairwise_wilcoxon, glass_delta, compute
 include("./name-inference.jl")
 include("./timeseries.jl")
 include("./metrics.jl")
-include("./metrics/iderrs.jl")
-include("./metrics/sort.jl")
-include("./metrics/phylogeneticestimator.jl")
-include("./metrics/genotypesum.jl")
-include("./metrics/genotypesize.jl")
-include("./metrics/estimatecacheevalsample.jl")
+include("./metrics/metrics.jl")
 end

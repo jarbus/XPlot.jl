@@ -1,0 +1,6 @@
+include("./estimatecacheevalsample.jl")
+include("./genotypesize.jl")
+include("./genotypesum.jl")
+include("./iderrs.jl")
+include("./phylogeneticestimator.jl")
+include("./sort.jl")
