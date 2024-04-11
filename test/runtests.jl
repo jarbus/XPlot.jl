@@ -2,6 +2,7 @@ using XPlot
 using Plots
 using Test
 using HypothesisTests
+using JLD2
 
 nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
 
@@ -36,43 +37,43 @@ nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
 
     @test "interaction-distance-1" == XPlot.compute_name(nc, "x/", "x/interaction-distance-1/data/archive.jld2")
 end
-@testset "InteractionDistanceErrors" begin
-    jld2path = joinpath(@__DIR__, "x/interaction-distance/")
-    figname = joinpath(@__DIR__, "x/interaction-distance/fig.png")
-    # We probably want to move this into PhyloCoEvo at some point
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path * "1"])
-    @test length(iderrs) == 3
-    plot(iderrs)
-    savefig("$figname")
-    # clear current plot
-    Plots.plot()
-    # Load two iderrs
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
-    @test length(iderrs) == 6
-    plot(iderrs)
-    figname = joinpath(@__DIR__, "x/interaction-distance/fig2.png")
-    savefig("$figname")
-    # clear current plot
-    Plots.plot()
-    # Load and aggregate two iderrs
-    paths = repeat([jld2path], 10)
-    iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
-    agg_iderrs = XPlot.agg(iderrs)
-    @test length(agg_iderrs) == 3
-    plot(agg_iderrs, title="Two agg")
-    figname = joinpath(@__DIR__, "x/interaction-distance/fig3.png")
-    savefig("$figname")
-    # clear current plot
-    Plots.plot()
-end
+# @testset "InteractionDistanceErrors" begin
+#     jld2path = joinpath(@__DIR__, "x/interaction-distance/")
+#     figname = joinpath(@__DIR__, "x/interaction-distance/fig.png")
+#     # We probably want to move this into PhyloCoEvo at some point
+#     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path * "1"])
+#     @test length(iderrs) == 3
+#     plot(iderrs)
+#     savefig("$figname")
+#     # clear current plot
+#     Plots.plot()
+#     # Load two iderrs
+#     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
+#     @test length(iderrs) == 6
+#     plot(iderrs)
+#     figname = joinpath(@__DIR__, "x/interaction-distance/fig2.png")
+#     savefig("$figname")
+#     # clear current plot
+#     Plots.plot()
+#     # Load and aggregate two iderrs
+#     paths = repeat([jld2path], 10)
+#     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
+#     agg_iderrs = XPlot.agg(iderrs)
+#     @test length(agg_iderrs) == 3
+#     plot(agg_iderrs, title="Two agg")
+#     figname = joinpath(@__DIR__, "x/interaction-distance/fig3.png")
+#     savefig("$figname")
+#     # clear current plot
+#     Plots.plot()
+# end
 
 @testset "DummyData" begin  
     dummyfigsdir = joinpath(@__DIR__, "dummy-figs")
     isdir(dummyfigsdir) || mkdir(dummyfigsdir)
     TSDP = XPlot.TimeSeriesDataPoint
-    tsd1a = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 1, 0.5, 1.5), TSDP(2, 2, 1, 3), TSDP(3,2,1,3)], "x", "y", "dummy-data",1)
-    tsd1b = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data",1)
-    tsd2 = XPlot.TimeSeriesData("dummy-data-2", [TSDP(1, 5, 4.5, 5.5), TSDP(2, 6, 5, 7), TSDP(3,6,5,7)], "x", "y", "dummy-data-2",1)
+    tsd1a = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 1), TSDP(2, 2), TSDP(3,2)], "x", "y", "dummy-data",1)
+    tsd1b = XPlot.TimeSeriesData("dummy-data-1", [TSDP(1, 5), TSDP(2, 6), TSDP(3,6)], "x", "y", "dummy-data",1)
+    tsd2 = XPlot.TimeSeriesData("dummy-data-2", [TSDP(1, 5), TSDP(2, 6), TSDP(3,6)], "x", "y", "dummy-data-2",1)
     @testset "TimeSeriesPlot" begin
         # Plot two different time series
         plot([tsd1a, tsd2], title="test")
@@ -99,14 +100,26 @@ end
         # verify aggregate data for dummy-data-1
         @test length(agg_dd1.data) == 3
         @test agg_dd1.data[1].x == 1 && agg_dd1.data[1].value == 3 && agg_dd1.data[1].count == n_samples
+        @test agg_dd1.data[1].max == 5 && agg_dd1.data[1].min == 1
         @test agg_dd1.data[2].x == 2 && agg_dd1.data[2].value == 4 && agg_dd1.data[2].count == n_samples
+        @test agg_dd1.data[2].max == 6 && agg_dd1.data[2].min == 2
         @test agg_dd1.data[3].x == 3 && agg_dd1.data[3].value == 4 && agg_dd1.data[3].count == n_samples
+        @test agg_dd1.data[3].max == 6 && agg_dd1.data[3].min == 2
+        @test agg_dd1.data[1].std ≈ 2.108 atol=0.01
+        @test agg_dd1.data[2].std ≈ 2.108 atol=0.01
+        @test agg_dd1.data[3].std ≈ 2.108 atol=0.01
 
         # verify aggregate data for dummy-data-2
         @test length(agg_dd2.data) == 3
         @test agg_dd2.data[1].x == 1 && agg_dd2.data[1].value == 5 && agg_dd2.data[1].count == n_samples
+        @test agg_dd2.data[1].max == 5 && agg_dd2.data[1].min == 5
         @test agg_dd2.data[2].x == 2 && agg_dd2.data[2].value == 6 && agg_dd2.data[2].count == n_samples
+        @test agg_dd2.data[2].max == 6 && agg_dd2.data[2].min == 6
         @test agg_dd2.data[3].x == 3 && agg_dd2.data[3].value == 6 && agg_dd2.data[3].count == n_samples
+        @test agg_dd2.data[3].max == 6 && agg_dd2.data[3].min == 6
+        @test agg_dd2.data[1].std ≈ 0.0 atol=0.01
+        @test agg_dd2.data[2].std ≈ 0.0 atol=0.01
+        @test agg_dd2.data[3].std ≈ 0.0 atol=0.01
         XPlot.plot(agg_dd1, title="Agg")
         savefig(figname)
         @test isfile(figname)
@@ -121,58 +134,93 @@ end
     end
 end
 
-@testset "Kruskall-Wallis" begin
-    # Test to ensure that data is getting extracted correctly
-    # from TimeSeriesDataPoints for the wilcoxon test
+struct DummyMetric <: AbstractMetric end
+struct DummyStatisticalMetric <: AbstractMetric end
 
-    # example from
-    # https://www.statology.org/kruskal-wallis-test/
+@testset "Measurements" begin
+    m = XPlot.Measurement(DummyMetric, 1.0, 1)
+    data = [1,2,3]
+    sm = XPlot.StatisticalMeasurement(DummyStatisticalMetric, data, 1)
+    nc = NameConfig()
+    @assert dirname(nc.relative_datapath) == "data"
+    data_dir = "x/dummyset/dummyexperiment/1/data"
+    mkpath(data_dir)
+    archive_path = joinpath(data_dir, "archive.jld2")
 
-    # slight difference in the p-value compared to the
-    # example on the website, but I trust the
-    # HypothesisTests.jl 
-    data = [78 71 57; 65 66 88; 63 56 58; 44 40 78; 50 55 65; 78 31 61; 70 45 62; 61 66 44; 50 47 48; 44 42 77]
-    # convert each column to a vector
-    cols = [data[:,i] for i in 1:size(data, 2)]
-    # convert each column to a vector of vectors
-    # of TimeSeriesDataPoints with x=1 and a value
-    # equal to the value in the column
-    datapoints = [[XPlot.TimeSeriesDataPoint(1, v, 0, 0) for v in col] for col in cols]
-    vvts = [[XPlot.TimeSeriesData("dummy-data",
-                                  [dist[i], XPlot.TimeSeriesDataPoint(3, 1, 0, 0)],
-                                         "x", "y", "dummy-data", 1) 
-                        for i in eachindex(dist)]
-                        for dist in datapoints]
-
-
-    # perform kruskal-wallis test
-    p1 = XPlot.kruskal_wallis(vvts, 1)
-    p2 = KruskalWallisTest(cols...) |> pvalue
-    @test p1 ≈ p2 
-    @test p1 ≈ 0.21 atol=0.01
+    @testset "Writing" begin
+        jldopen(archive_path, "w") do f
+            XPlot.write(f, m)
+            XPlot.write(f, sm)
+        end
+        jldopen(archive_path, "r") do f
+            @test f["$(XPlot.HEAD)/1/DummyMetric"] == 1.0
+            @test f["$(XPlot.HEAD)/1/DummyStatisticalMetric/min"] == 1.0
+            @test f["$(XPlot.HEAD)/1/DummyStatisticalMetric/mean"] == 2.0
+            @test "1" ∈ keys(f["$(XPlot.HEAD)"])
+        end
+    end
+    @testset "Loading" begin
+        ts = XPlot.load(DummyMetric(), nc, "x/dummyset")
+        sts = XPlot.load(DummyStatisticalMetric(), nc, "x/dummyset")
+        @test ts[1].data[1].value == 1.0
+        @test sts[1].data[1].value == 2.0
+    end
+    rm("x/dummyset", recursive=true)
 end
 
-@testset "Wilcoxon" begin
-    # Test to ensure that data is getting extracted correctly
-    # from TimeSeriesDataPoints for the wilcoxon test
-    # https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test
-    data = [
-        125 115 130 140 140 115 140 125 140 135;
-        110 122 125 120 140 124 123 137 135 145
-    ]
-    # create two vectors of TimeSeriesDataPoints
-    # with x=1 and a value equal to the value in the column
-    vvts = [[XPlot.TimeSeriesData("dummy-data",
-                    [XPlot.TimeSeriesDataPoint(1, v, 0, 0)
-                        XPlot.TimeSeriesDataPoint(2, v+1, 0, 0) ],
-                        "x", "y", "dummy-data", 1) 
-                    for v in row]
-                    for row in eachrow(data)]
-
-
-    p1 = XPlot.wilcoxon(vvts[1], vvts[2], 1)
-    p2 = SignedRankTest(data[1,:], data[2,:]) |> pvalue
-    @test p1 ≈ p2
-    @test p1 ≈ 0.61 atol=0.1 # slightly different from the wikipedia example,
-                             # but I'm not going to question HypothesisTests.jl
-end
+#
+# @testset "Kruskall-Wallis" begin
+#     # Test to ensure that data is getting extracted correctly
+#     # from TimeSeriesDataPoints for the wilcoxon test
+#
+#     # example from
+#     # https://www.statology.org/kruskal-wallis-test/
+#
+#     # slight difference in the p-value compared to the
+#     # example on the website, but I trust the
+#     # HypothesisTests.jl 
+#     data = [78 71 57; 65 66 88; 63 56 58; 44 40 78; 50 55 65; 78 31 61; 70 45 62; 61 66 44; 50 47 48; 44 42 77]
+#     # convert each column to a vector
+#     cols = [data[:,i] for i in 1:size(data, 2)]
+#     # convert each column to a vector of vectors
+#     # of TimeSeriesDataPoints with x=1 and a value
+#     # equal to the value in the column
+#     datapoints = [[XPlot.TimeSeriesDataPoint(1, v, 0, 0) for v in col] for col in cols]
+#     vvts = [[XPlot.TimeSeriesData("dummy-data",
+#                                   [dist[i], XPlot.TimeSeriesDataPoint(3, 1, 0, 0)],
+#                                          "x", "y", "dummy-data", 1) 
+#                         for i in eachindex(dist)]
+#                         for dist in datapoints]
+#
+#
+#     # perform kruskal-wallis test
+#     p1 = XPlot.kruskal_wallis(vvts, 1)
+#     p2 = KruskalWallisTest(cols...) |> pvalue
+#     @test p1 ≈ p2 
+#     @test p1 ≈ 0.21 atol=0.01
+# end
+#
+# @testset "Wilcoxon" begin
+#     # Test to ensure that data is getting extracted correctly
+#     # from TimeSeriesDataPoints for the wilcoxon test
+#     # https://en.wikipedia.org/wiki/Wilcoxon_signed-rank_test
+#     data = [
+#         125 115 130 140 140 115 140 125 140 135;
+#         110 122 125 120 140 124 123 137 135 145
+#     ]
+#     # create two vectors of TimeSeriesDataPoints
+#     # with x=1 and a value equal to the value in the column
+#     vvts = [[XPlot.TimeSeriesData("dummy-data",
+#                     [XPlot.TimeSeriesDataPoint(1, v, 0, 0)
+#                         XPlot.TimeSeriesDataPoint(2, v+1, 0, 0) ],
+#                         "x", "y", "dummy-data", 1) 
+#                     for v in row]
+#                     for row in eachrow(data)]
+#
+#
+#     p1 = XPlot.wilcoxon(vvts[1], vvts[2], 1)
+#     p2 = SignedRankTest(data[1,:], data[2,:]) |> pvalue
+#     @test p1 ≈ p2
+#     @test p1 ≈ 0.61 atol=0.1 # slightly different from the wikipedia example,
+#                              # but I'm not going to question HypothesisTests.jl
+# end

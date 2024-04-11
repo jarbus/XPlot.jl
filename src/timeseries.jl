@@ -4,8 +4,6 @@ abstract type AbstractTimeSeries end
 struct TimeSeriesDataPoint <: AbstractTimeSeriesDataPoint
     x::Float64
     value::Float64
-    lower_bound::Union{Float64, Nothing}
-    upper_bound::Union{Float64, Nothing}
 end
 
 struct AggregatedTimeSeriesDataPoint <: AbstractTimeSeriesDataPoint
@@ -143,9 +141,13 @@ function rolling(timeseries::TimeSeriesData; window_size=10)
     return TimeSeriesData(timeseries.name, new_data, timeseries.xname, timeseries.yaxis, timeseries.label, timeseries.trial)
 end
 
+function Plots.plot!(p::TimeSeriesData; kwargs...)
+    xs = [d.x for d in p.data]
+    ys = [d.value for d in p.data]
+    plot!(xs, ys, label=p.label; kwargs...)
+end
 
-
-function Plots.plot!(p::AbstractTimeSeries; kwargs...)
+function Plots.plot!(p::AggregatedTimeSeriesData; kwargs...)
     xs = [d.x for d in p.data]
     ys = [d.value for d in p.data]
     upper = [d.upper_bound isa Float64 ? d.upper_bound - d.value : 0 for d in p.data]
