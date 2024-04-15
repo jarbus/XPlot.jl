@@ -38,9 +38,9 @@ Base.show(io::IO, m::Measurement; digits::Int=3) = print(io, "iter=$(m.iteration
 Base.show(io::IO, m::StatisticalMeasurement; digits::Int=3) = print(io, 
     "gen=$(m.iteration) $(m.metric): |$(round(m.min, digits=digits)), $(round(m.mean, digits=digits)) ± $(round(m.std, digits=digits)), $(round(m.max, digits=digits))|, $(m.n_samples) samples")
 
-write(f, m::Measurement) = f[joinpath(HEAD,"$(m.iteration)/$(m.metric)")] = m.value
+write(f, m::Measurement) = f[joinpath(XPlot.HEAD,"$(m.iteration)/$(m.metric)")] = m.value
 function write(f, m::StatisticalMeasurement)
-    head = joinpath(HEAD, "$(m.iteration)/$(m.metric)")
+    head = joinpath(XPlot.HEAD, "$(m.iteration)/$(m.metric)")
     f[joinpath(head, "min")] = m.min
     f[joinpath(head, "mean")] = m.mean
     f[joinpath(head, "lower_bound")] = m.lower_bound

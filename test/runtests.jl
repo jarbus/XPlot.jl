@@ -129,6 +129,11 @@ end
         plot(XPlot.agg(vcat(dd1, dd2)), title="test")
         savefig(figname2)
         @test isfile(figname2)
+        # if kitty command is defined, display the figure using icat
+        if !isnothing(Sys.which("kitty"))
+            run(`kitty +kitten icat $figname`)
+            run(`kitty +kitten icat $figname2`)
+        end
         # clear current plot
         Plots.plot()
     end
