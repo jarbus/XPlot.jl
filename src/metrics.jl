@@ -33,33 +33,38 @@ end
 
 load(metric::AbstractMetric, nc::NameConfig, path::String)= load(metric, nc, [path])
 
-isstatistical(f, path) = haskey(f, joinpath(path, "mean"))
+isstatistical(file, path::String) = haskey(file[path], "mean")
 
-function load_datapoint(file, path, gen::Int)
-    isstatistical(file, path) ?
-        TimeSeriesDataPoint(
-                            gen,
-            file[joinpath(path, "mean")],
-        ) :
-        TimeSeriesDataPoint(
-                            gen,
-            file[path],
-        )
+function load_datapoint(file, path::String, gen::Int)
+    isstatistical(file, path) ? begin
+        StatisticalTimeSeriesDataPoint(gen,
+            file[joinpath(path, "min")] |> read,
+            file[joinpath(path, "mean")] |> read,
+            file[joinpath(path, "lower_bound")] |> read,
+            file[joinpath(path, "upper_bound")] |> read,
+            file[joinpath(path, "std")] |> read,
+            file[joinpath(path, "max")] |> read,
+            file[joinpath(path, "n_samples")] |> read,
+           ) end : begin
+        TimeSeriesDataPoint(gen, file[path] |> read,)
+    end
 end
 
-function _load_datapoints(file, path)
-    dp = TimeSeriesDataPoint[]
+function _load_datapoints(file, path::String)
+    dp = nothing
     for step in keys(file[HEAD])
-        println("Loading step $step")
+        @debug "Loading step $step"
 
         full_path = joinpath(HEAD, step, path)
         if !haskey(file, full_path)
-            #error("No key $full_path in file")
             println("No key $full_path in file")
             continue
         end
         datapoint = load_datapoint(file, full_path, parse(Int, step))
-        isnan(datapoint.value) && continue
+        if isnothing(dp)
+            dp = Vector{typeof(datapoint)}()
+        end
+        isnan(datapoint) && continue
         push!(dp, datapoint)
     end
     length(dp) == 0 && @warn("No datapoints found in $path")
@@ -74,12 +79,12 @@ function general_load(
         path::String
     )
     classname, xname, trial = subdir_naming_scheme(nc, path)
-    println("Loading cls=$classname x=$xname trial=$trial")
+    @debug "Loading cls=$classname x=$xname trial=$trial"
     timeseries = TimeSeriesData[]
 
     pidpath = path*".pid"
     monitor = FileWatching.Pidfile.mkpidlock(pidpath, wait=true)
-    jldopen(path, "r") do file
+    h5open(path, "r") do file
         f(file, metric, xname, trial, timeseries)
     end
     close(monitor)

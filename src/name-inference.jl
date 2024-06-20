@@ -4,8 +4,8 @@
 # shared-path/class-name/experiment-name-{1,2,3,...}/path/archive.jld2
 
 Base.@kwdef struct NameConfig
-    seed_suffix = "-"
-    relative_datapath = "data/archive.jld2"
+    seed_suffix = "/"
+    relative_datapath = "data/archive.h5"
 end
 
 function find_datapath_recursively(nc::NameConfig, path::String)

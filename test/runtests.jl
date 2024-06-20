@@ -1,14 +1,12 @@
 using XPlot
-using Plots
 using Test
-using HypothesisTests
-using JLD2
+# using HypothesisTests
 
-nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
+nc = XPlot.NameConfig(relative_datapath="data/archive.h5", seed_suffix="/")
 
 @testset "NameInference" begin
-    paths = ["x/interaction-distance/1/data/archive.jld2",
-        "x/interaction-distance/2/data/archive.jld2"]
+    paths = ["x/interaction-distance/1/data/archive.h5",
+        "x/interaction-distance/2/data/archive.h5"]
     @test XPlot.compute_prefix(paths) == "x/"
 
     classname, xname, trial = XPlot.subdir_naming_scheme(nc, paths[1])
@@ -20,8 +18,8 @@ nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
     path = joinpath(@__DIR__,"x/interaction-distance/")
     paths = XPlot.find_datapath_recursively(nc, path)
     @test length(paths) == 2
-    @test paths[1] == "$DIR/x/interaction-distance/1/data/archive.jld2"
-    @test paths[2] == "$DIR/x/interaction-distance/2/data/archive.jld2"
+    @test paths[1] == "$DIR/x/interaction-distance/1/data/archive.h5"
+    @test paths[2] == "$DIR/x/interaction-distance/2/data/archive.h5"
 
     @test ""      == XPlot.remove_trailing_numbers("451")
     @test "seed-" == XPlot.remove_trailing_numbers("seed-4")
@@ -30,42 +28,13 @@ nc = XPlot.NameConfig(relative_datapath="data/archive.jld2", seed_suffix="/")
     @test "hi" == XPlot.remove_seed(nc, "hi/3")
     @test "" == XPlot.remove_seed(nc, "/3")
     @test "hi" == XPlot.remove_seed(nc, "hi")
-    @test "x/interaction-distance-1/" == XPlot.remove_relative_datapath(nc, "x/interaction-distance-1/data/archive.jld2")
+    @test "x/interaction-distance-1/" == XPlot.remove_relative_datapath(nc, "x/interaction-distance-1/data/archive.h5")
     @test "x/interaction-distance-1/" == XPlot.remove_relative_datapath(nc, "x/interaction-distance-1/")
 
     @test "interaction-distance-1" == XPlot.remove_prefix("x/", "x/interaction-distance-1")
 
-    @test "interaction-distance-1" == XPlot.compute_name(nc, "x/", "x/interaction-distance-1/data/archive.jld2")
+    @test "interaction-distance-1" == XPlot.compute_name(nc, "x/", "x/interaction-distance-1/data/archive.h5")
 end
-# @testset "InteractionDistanceErrors" begin
-#     jld2path = joinpath(@__DIR__, "x/interaction-distance/")
-#     figname = joinpath(@__DIR__, "x/interaction-distance/fig.png")
-#     # We probably want to move this into PhyloCoEvo at some point
-#     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path * "1"])
-#     @test length(iderrs) == 3
-#     plot(iderrs)
-#     savefig("$figname")
-#     # clear current plot
-#     Plots.plot()
-#     # Load two iderrs
-#     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, [jld2path])
-#     @test length(iderrs) == 6
-#     plot(iderrs)
-#     figname = joinpath(@__DIR__, "x/interaction-distance/fig2.png")
-#     savefig("$figname")
-#     # clear current plot
-#     Plots.plot()
-#     # Load and aggregate two iderrs
-#     paths = repeat([jld2path], 10)
-#     iderrs = XPlot.load(XPlot.InteractionDistanceErrors(1:3), nc, paths)
-#     agg_iderrs = XPlot.agg(iderrs)
-#     @test length(agg_iderrs) == 3
-#     plot(agg_iderrs, title="Two agg")
-#     figname = joinpath(@__DIR__, "x/interaction-distance/fig3.png")
-#     savefig("$figname")
-#     # clear current plot
-#     Plots.plot()
-# end
 
 @testset "DummyData" begin  
     dummyfigsdir = joinpath(@__DIR__, "dummy-figs")
@@ -81,7 +50,7 @@ end
         savefig(figname)
         @test isfile(figname)
         # clear current plot
-        Plots.plot()
+        XPlot.Plots.plot()
     end
     @testset "Aggregation" begin
         # Create aggregate time series data
@@ -99,11 +68,11 @@ end
         agg_dd2 = auto_agg_data[findfirst(x -> x.name == "dummy-data-2", auto_agg_data)]
         # verify aggregate data for dummy-data-1
         @test length(agg_dd1.data) == 3
-        @test agg_dd1.data[1].x == 1 && agg_dd1.data[1].value == 3 && agg_dd1.data[1].count == n_samples
+        @test agg_dd1.data[1].x == 1 && agg_dd1.data[1].value == 3 && agg_dd1.data[1].n_samples == n_samples
         @test agg_dd1.data[1].max == 5 && agg_dd1.data[1].min == 1
-        @test agg_dd1.data[2].x == 2 && agg_dd1.data[2].value == 4 && agg_dd1.data[2].count == n_samples
+        @test agg_dd1.data[2].x == 2 && agg_dd1.data[2].value == 4 && agg_dd1.data[2].n_samples == n_samples
         @test agg_dd1.data[2].max == 6 && agg_dd1.data[2].min == 2
-        @test agg_dd1.data[3].x == 3 && agg_dd1.data[3].value == 4 && agg_dd1.data[3].count == n_samples
+        @test agg_dd1.data[3].x == 3 && agg_dd1.data[3].value == 4 && agg_dd1.data[3].n_samples == n_samples
         @test agg_dd1.data[3].max == 6 && agg_dd1.data[3].min == 2
         @test agg_dd1.data[1].std ≈ 2.108 atol=0.01
         @test agg_dd1.data[2].std ≈ 2.108 atol=0.01
@@ -111,11 +80,11 @@ end
 
         # verify aggregate data for dummy-data-2
         @test length(agg_dd2.data) == 3
-        @test agg_dd2.data[1].x == 1 && agg_dd2.data[1].value == 5 && agg_dd2.data[1].count == n_samples
+        @test agg_dd2.data[1].x == 1 && agg_dd2.data[1].value == 5 && agg_dd2.data[1].n_samples == n_samples
         @test agg_dd2.data[1].max == 5 && agg_dd2.data[1].min == 5
-        @test agg_dd2.data[2].x == 2 && agg_dd2.data[2].value == 6 && agg_dd2.data[2].count == n_samples
+        @test agg_dd2.data[2].x == 2 && agg_dd2.data[2].value == 6 && agg_dd2.data[2].n_samples == n_samples
         @test agg_dd2.data[2].max == 6 && agg_dd2.data[2].min == 6
-        @test agg_dd2.data[3].x == 3 && agg_dd2.data[3].value == 6 && agg_dd2.data[3].count == n_samples
+        @test agg_dd2.data[3].x == 3 && agg_dd2.data[3].value == 6 && agg_dd2.data[3].n_samples == n_samples
         @test agg_dd2.data[3].max == 6 && agg_dd2.data[3].min == 6
         @test agg_dd2.data[1].std ≈ 0.0 atol=0.01
         @test agg_dd2.data[2].std ≈ 0.0 atol=0.01
@@ -124,7 +93,7 @@ end
         savefig(figname)
         @test isfile(figname)
         # clear current plot
-        Plots.plot()
+        XPlot.Plots.plot()
         figname2 = joinpath(@__DIR__, "dummy-figs/agg-dummy-data-1a,1b,2.png")
         plot(XPlot.agg(vcat(dd1, dd2)), title="test")
         savefig(figname2)
@@ -135,7 +104,7 @@ end
             run(`kitty +kitten icat $figname2`)
         end
         # clear current plot
-        Plots.plot()
+        XPlot.Plots.plot()
     end
 end
 
@@ -146,29 +115,28 @@ struct DummyStatisticalMetric <: AbstractMetric end
     m = XPlot.Measurement(DummyMetric, 1.0, 1)
     data = [1,2,3]
     sm = XPlot.StatisticalMeasurement(DummyStatisticalMetric, data, 1)
-    nc = NameConfig()
     @assert dirname(nc.relative_datapath) == "data"
     data_dir = "x/dummyset/dummyexperiment/1/data"
     mkpath(data_dir)
-    archive_path = joinpath(data_dir, "archive.jld2")
+    archive_path = joinpath(data_dir, "archive.h5")
 
     @testset "Writing" begin
-        jldopen(archive_path, "w") do f
+        h5open(archive_path, "cw") do f
             XPlot.write(f, m)
             XPlot.write(f, sm)
         end
-        jldopen(archive_path, "r") do f
-            @test f["$(XPlot.HEAD)/1/DummyMetric"] == 1.0
-            @test f["$(XPlot.HEAD)/1/DummyStatisticalMetric/min"] == 1.0
-            @test f["$(XPlot.HEAD)/1/DummyStatisticalMetric/mean"] == 2.0
-            @test "1" ∈ keys(f["$(XPlot.HEAD)"])
+        h5open(archive_path, "r") do f
+            @test f["$(XPlot.HEAD)/1/DummyMetric"] |> read == 1.0
+            @test f["$(XPlot.HEAD)/1/DummyStatisticalMetric/min"] |> read == 1.0
+            @test f["$(XPlot.HEAD)/1/DummyStatisticalMetric/mean"] |> read == 2.0
+            @test haskey(f, "$(XPlot.HEAD)/1")
         end
     end
     @testset "Loading" begin
         ts = XPlot.load(DummyMetric(), nc, "x/dummyset")
         sts = XPlot.load(DummyStatisticalMetric(), nc, "x/dummyset")
         @test ts[1].data[1].value == 1.0
-        @test sts[1].data[1].value == 2.0
+        @test sts[1].data[1].mean == 2.0
     end
     rm("x/dummyset", recursive=true)
 end
