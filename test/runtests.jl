@@ -4,6 +4,13 @@ using Test
 
 nc = XPlot.NameConfig(relative_datapath="data/archive.h5", seed_suffix="/")
 
+function run_if_kitty(path::String)
+    if !isnothing(Sys.which("kitty"))
+        run(`kitty +kitten icat $path`)
+        sleep(1)
+    end
+end
+
 @testset "NameInference" begin
     paths = ["x/interaction-distance/1/data/archive.h5",
         "x/interaction-distance/2/data/archive.h5"]
@@ -68,11 +75,11 @@ end
         agg_dd2 = auto_agg_data[findfirst(x -> x.name == "dummy-data-2", auto_agg_data)]
         # verify aggregate data for dummy-data-1
         @test length(agg_dd1.data) == 3
-        @test agg_dd1.data[1].x == 1 && agg_dd1.data[1].value == 3 && agg_dd1.data[1].n_samples == n_samples
+        @test agg_dd1.data[1].x == 1 && agg_dd1.data[1].mean == 3 && agg_dd1.data[1].n_samples == n_samples
         @test agg_dd1.data[1].max == 5 && agg_dd1.data[1].min == 1
-        @test agg_dd1.data[2].x == 2 && agg_dd1.data[2].value == 4 && agg_dd1.data[2].n_samples == n_samples
+        @test agg_dd1.data[2].x == 2 && agg_dd1.data[2].mean == 4 && agg_dd1.data[2].n_samples == n_samples
         @test agg_dd1.data[2].max == 6 && agg_dd1.data[2].min == 2
-        @test agg_dd1.data[3].x == 3 && agg_dd1.data[3].value == 4 && agg_dd1.data[3].n_samples == n_samples
+        @test agg_dd1.data[3].x == 3 && agg_dd1.data[3].mean == 4 && agg_dd1.data[3].n_samples == n_samples
         @test agg_dd1.data[3].max == 6 && agg_dd1.data[3].min == 2
         @test agg_dd1.data[1].std ≈ 2.108 atol=0.01
         @test agg_dd1.data[2].std ≈ 2.108 atol=0.01
@@ -80,11 +87,11 @@ end
 
         # verify aggregate data for dummy-data-2
         @test length(agg_dd2.data) == 3
-        @test agg_dd2.data[1].x == 1 && agg_dd2.data[1].value == 5 && agg_dd2.data[1].n_samples == n_samples
+        @test agg_dd2.data[1].x == 1 && agg_dd2.data[1].mean == 5 && agg_dd2.data[1].n_samples == n_samples
         @test agg_dd2.data[1].max == 5 && agg_dd2.data[1].min == 5
-        @test agg_dd2.data[2].x == 2 && agg_dd2.data[2].value == 6 && agg_dd2.data[2].n_samples == n_samples
+        @test agg_dd2.data[2].x == 2 && agg_dd2.data[2].mean == 6 && agg_dd2.data[2].n_samples == n_samples
         @test agg_dd2.data[2].max == 6 && agg_dd2.data[2].min == 6
-        @test agg_dd2.data[3].x == 3 && agg_dd2.data[3].value == 6 && agg_dd2.data[3].n_samples == n_samples
+        @test agg_dd2.data[3].x == 3 && agg_dd2.data[3].mean == 6 && agg_dd2.data[3].n_samples == n_samples
         @test agg_dd2.data[3].max == 6 && agg_dd2.data[3].min == 6
         @test agg_dd2.data[1].std ≈ 0.0 atol=0.01
         @test agg_dd2.data[2].std ≈ 0.0 atol=0.01
@@ -99,10 +106,8 @@ end
         savefig(figname2)
         @test isfile(figname2)
         # if kitty command is defined, display the figure using icat
-        if !isnothing(Sys.which("kitty"))
-            run(`kitty +kitten icat $figname`)
-            run(`kitty +kitten icat $figname2`)
-        end
+        run_if_kitty("$figname")
+        run_if_kitty("$figname2")
         # clear current plot
         XPlot.Plots.plot()
     end
@@ -141,7 +146,52 @@ struct DummyStatisticalMetric <: AbstractMetric end
     rm("x/dummyset", recursive=true)
 end
 
-#
+@testset "FullIntegrationTest" begin
+    # Log and write dummy measurements (statistical and non-statistical)
+    # over multiple trials
+    n_trials = 10
+    n_gens = 10
+    struct TestNonStatisticalMetric <: AbstractMetric end
+    struct TestStatisticalMetric <: AbstractMetric end
+    class_dir = "x/dummyset/"
+    nc = XPlot.NameConfig(relative_datapath="data/statistics.h5", seed_suffix="/")
+    for i in 1:n_trials
+        stat_path = joinpath(class_dir, "dummyexperiment/$i/data")
+        mkpath(stat_path)
+        h5open(joinpath(stat_path, "statistics.h5"), "cw") do f
+            for j in 1:n_gens
+                m = XPlot.Measurement(TestNonStatisticalMetric, rand(), j)
+                sm = XPlot.StatisticalMeasurement(TestStatisticalMetric, rand(100), j)
+                XPlot.write(f, m)
+                XPlot.write(f, sm)
+            end
+        end
+    end
+    # Load data
+    nonstatistical = XPlot.load(TestNonStatisticalMetric(), nc, class_dir)
+    statistical = XPlot.load(TestStatisticalMetric(), nc, class_dir)
+
+    # Plot non-statistical and statistical data
+    XPlot.plot(nonstatistical, title="Non-Statistical")
+    fname = joinpath(class_dir, "nonstatistical.png")
+    XPlot.savefig(fname)
+    run_if_kitty(fname)
+
+    XPlot.plot(statistical, title="Statistical")
+    fname = joinpath(class_dir, "statistical.png")
+    XPlot.savefig(fname)
+    run_if_kitty(fname)
+
+    # Aggregate data and plot again
+    agg_nonstatistical = XPlot.agg(nonstatistical)
+    XPlot.plot(agg_nonstatistical, title="Aggregated Non-Statistical")
+    fname = joinpath(class_dir, "agg-nonstatistical.png")
+    XPlot.savefig(fname)
+    run_if_kitty(fname)
+    # Remove data
+    rm("x/dummyset", recursive=true)
+end
+
 # @testset "Kruskall-Wallis" begin
 #     # Test to ensure that data is getting extracted correctly
 #     # from TimeSeriesDataPoints for the wilcoxon test
