@@ -50,8 +50,8 @@ Base.isnan(d::AbstractTimeSeriesDataPoint) = isnan(mean(d))
 Base.show(io::IO, datapoint::AbstractTimeSeriesDataPoint) = print(io, "($(round(datapoint.x, digits=2)), $(round(datapoint.value, digits=2)))")
 Base.show(io::IO, ts::AbstractTimeSeries) = print(io, "$(typeof(ts))($(ts.name),length=$(length(ts.data)) $(ts.xname), $(ts.yaxis), $(ts.label), $(ts.trial))")
 
-mean(p::StatisticalTimeSeriesDataPoint) = p.mean
-mean(p::TimeSeriesDataPoint) = p.value
+StatsBase.mean(p::StatisticalTimeSeriesDataPoint) = p.mean
+StatsBase.mean(p::TimeSeriesDataPoint) = p.value
 
 function AggregatedTimeSeriesDataPoint(datapoints::Vector{TimeSeriesDataPoint})
     # check that all xs are the same
