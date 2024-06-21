@@ -1,7 +1,7 @@
 name = "XPlot"
 uuid = "05f8af49-9276-49ac-91ff-a5ea52b3fe06"
 authors = ["Jack <jackgarbus@gmail.com> and contributors"]
-version = "1.1.0"
+version = "1.2.0"
 
 [deps]
 Bootstrap = "e28b5b4c-05e8-5b66-bc03-6f0c0a0a06e0"
