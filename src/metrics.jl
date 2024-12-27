@@ -51,7 +51,12 @@ function load_datapoint(file, path::String, gen::Int)
 end
 
 function _load_datapoints(file, path::String)
+    if !in(HEAD, keys(file)) 
+        println("key $HEAD not found $file. Found keys $(keys(file))")
+        return Vector{AbstractTimeSeriesDataPoint}()
+    end
     dp = nothing
+
     for step in keys(file[HEAD])
         @debug "Loading step $step"
 

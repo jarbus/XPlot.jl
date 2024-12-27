@@ -96,7 +96,11 @@ function AggregatedTimeSeriesData(
             if !haskey(agg_data, datapoint.x)
                 agg_data[datapoint.x] = []
             end
-            push!(agg_data[datapoint.x], datapoint)
+            if datapoint isa TimeSeriesDataPoint
+                push!(agg_data[datapoint.x], datapoint)
+            elseif datapoint isa StatisticalTimeSeriesDataPoint
+                push!(agg_data[datapoint.x], TimeSeriesDataPoint(datapoint.x, datapoint.max))
+            end
         end
     end
     # aggregate data over time points
