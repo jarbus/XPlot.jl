@@ -57,20 +57,25 @@ function _load_datapoints(file, path::String)
     end
     dp = nothing
 
-    for step in keys(file[HEAD])
-        @debug "Loading step $step"
-
-        full_path = joinpath(HEAD, step, path)
-        if !haskey(file, full_path)
-            println("No key $full_path in file")
-            continue
+    dp = AbstractTimeSeriesDataPoint[]
+    try
+        for step in keys(file[HEAD])
+            @debug "Loading step $step"
+    
+            full_path = joinpath(HEAD, step, path)
+            if !haskey(file, full_path)
+                println("No key $full_path in file")
+                continue
+            end
+            datapoint = load_datapoint(file, full_path, parse(Int, step))
+            if isnothing(dp)
+                dp = Vector{typeof(datapoint)}()
+            end
+            isnan(datapoint) && continue
+            push!(dp, datapoint)
         end
-        datapoint = load_datapoint(file, full_path, parse(Int, step))
-        if isnothing(dp)
-            dp = Vector{typeof(datapoint)}()
-        end
-        isnan(datapoint) && continue
-        push!(dp, datapoint)
+    catch e
+        @warn "An error occurred for $file: $e"
     end
     length(dp) == 0 && @warn("No datapoints found in $path")
     sort!(dp, by=x->x.x)
