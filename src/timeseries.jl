@@ -48,7 +48,8 @@ end
 
 Base.isnan(d::AbstractTimeSeriesDataPoint) = isnan(mean(d))
 Base.show(io::IO, datapoint::AbstractTimeSeriesDataPoint) = print(io, "($(round(datapoint.x, digits=2)), $(round(datapoint.value, digits=2)))")
-Base.show(io::IO, ts::AbstractTimeSeries) = print(io, "$(typeof(ts))($(ts.name),length=$(length(ts.data)) $(ts.xname), $(ts.yaxis), $(ts.label), $(ts.trial))")
+Base.show(io::IO, ts::AbstractTimeSeries) = print(io, "$(typeof(ts))($(ts.name),length=$(length(ts.data)) $(ts.xname), $(ts.yaxis), $(ts.label))")
+Base.show(io::IO, ts::TimeSeriesData) = print(io, "$(typeof(ts))($(ts.name),length=$(length(ts.data)) $(ts.xname), $(ts.yaxis), $(ts.label), $(ts.trial))")
 
 StatsBase.mean(p::StatisticalTimeSeriesDataPoint) = p.mean
 StatsBase.mean(p::TimeSeriesDataPoint) = p.value
@@ -99,6 +100,7 @@ function AggregatedTimeSeriesData(
             if datapoint isa TimeSeriesDataPoint
                 push!(agg_data[datapoint.x], datapoint)
             elseif datapoint isa StatisticalTimeSeriesDataPoint
+                # TODO this is hacky and not what a different user would expect
                 push!(agg_data[datapoint.x], TimeSeriesDataPoint(datapoint.x, datapoint.max))
             end
         end
